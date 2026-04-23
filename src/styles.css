@@ -597,7 +597,7 @@ td input {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  min-width: 980px;
+  min-width: 1500px;
   font-size: 0.9rem;
 }
 
@@ -621,11 +621,27 @@ td input {
   text-align: left;
   background: rgba(24, 33, 38, 0.04);
   font-weight: 600;
-  min-width: 8rem;
+  min-width: 7rem;
+}
+
+.bowling-table tbody td:nth-child(2) {
+  text-align: left;
+  min-width: 7.5rem;
+}
+
+.bowling-table tbody td:nth-child(3) {
+  text-align: left;
+  min-width: 7rem;
 }
 
 .bowling-total-cell {
   background: rgba(24, 33, 38, 0.08) !important;
+  font-weight: 700;
+}
+
+.bowling-grand-total-row th,
+.bowling-grand-total-row td {
+  background: rgba(24, 33, 38, 0.11) !important;
   font-weight: 700;
 }
 

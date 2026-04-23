@@ -19,6 +19,12 @@ const MONTHS = [
 ];
 
 const COST_TYPES = ["Capital", "Expense"];
+const ALLOCATIONS = ["Business", "Eaton IT", "External IT"];
+const CATEGORIES = [
+  { key: "labor", label: "Labor", allocations: ALLOCATIONS },
+  { key: "te", label: "T&E", allocations: ALLOCATIONS },
+  { key: "software", label: "Software", allocations: ["Direct"] },
+];
 
 function sumNode(node, metric) {
   if (typeof node?.[metric] === "number") return node[metric];
@@ -72,14 +78,14 @@ function buildMonthlyRows(budget) {
 }
 
 function buildCategoryRows(budget) {
-  const CATEGORIES = [
+  const categoryList = [
     { key: "labor", label: "Labor" },
     { key: "te", label: "T&E" },
     { key: "software", label: "Software" },
   ];
 
   return COST_TYPES.flatMap((costType) =>
-    CATEGORIES.map((cat) => {
+    categoryList.map((cat) => {
       const forecast = MONTHS.reduce(
         (t, m) => t + sumNode(budget[m][costType][cat.key], "forecast"),
         0
@@ -244,14 +250,71 @@ function getBowlingStatusMark(row) {
   return { label: "-", className: "bowling-mark-open" };
 }
 
-function BowlingTableChart({ data }) {
-  const annualForecast = data.reduce((total, row) => total + row.forecast, 0);
-  const annualActual = data.reduce((total, row) => total + row.actual, 0);
-  const annualVariance = annualActual - annualForecast;
-  const annualMark = getBowlingStatusMark({
-    forecast: annualForecast,
-    variance: annualVariance,
+function getAllocationMetricForMonth(budget, month, scope, categoryKey, allocation, metric) {
+  const scopes = scope === "Total" ? COST_TYPES : [scope];
+
+  return scopes.reduce((scopeTotal, costType) => {
+    const categoryNode = budget[month][costType][categoryKey];
+
+    if (allocation === "Direct") {
+      return scopeTotal + (categoryNode?.[metric] ?? 0);
+    }
+
+    return scopeTotal + (categoryNode?.[allocation]?.[metric] ?? 0);
+  }, 0);
+}
+
+function buildBowlingBreakdownRows(budget) {
+  const scopeOrder = ["Expense", "Capital", "Total"];
+
+  return scopeOrder.flatMap((scope) =>
+    CATEGORIES.flatMap((category) =>
+      category.allocations.map((allocation) => {
+        const months = MONTHS.map((month) => {
+          const forecast = getAllocationMetricForMonth(budget, month, scope, category.key, allocation, "forecast");
+          const actual = getAllocationMetricForMonth(budget, month, scope, category.key, allocation, "actual");
+
+          return {
+            month,
+            forecast,
+            actual,
+            variance: actual - forecast,
+          };
+        });
+
+        const annualForecast = months.reduce((total, monthRow) => total + monthRow.forecast, 0);
+        const annualActual = months.reduce((total, monthRow) => total + monthRow.actual, 0);
+
+        return {
+          scope,
+          category: category.label,
+          allocation,
+          months,
+          annualForecast,
+          annualActual,
+          annualVariance: annualActual - annualForecast,
+        };
+      })
+    )
+  );
+}
+
+function BowlingTableChart({ rows }) {
+  const monthlyTotals = MONTHS.map((month) => {
+    const forecast = rows.reduce((total, row) => total + row.months.find((monthRow) => monthRow.month === month).forecast, 0);
+    const actual = rows.reduce((total, row) => total + row.months.find((monthRow) => monthRow.month === month).actual, 0);
+
+    return {
+      month,
+      forecast,
+      actual,
+      variance: actual - forecast,
+    };
   });
+
+  const totalAnnualForecast = rows.reduce((total, row) => total + row.annualForecast, 0);
+  const totalAnnualActual = rows.reduce((total, row) => total + row.annualActual, 0);
+  const totalAnnualVariance = totalAnnualActual - totalAnnualForecast;
 
   return (
     <div className="bowling-wrap">
@@ -266,52 +329,82 @@ function BowlingTableChart({ data }) {
         <table className="bowling-table">
           <thead>
             <tr>
-              <th>Frame</th>
-              {data.map((row) => (
-                <th key={row.month}>{row.month}</th>
+              <th>Type</th>
+              <th>Category</th>
+              <th>Allocation</th>
+              {MONTHS.map((month) => (
+                <th key={month}>{month}</th>
               ))}
+              <th>Annual F</th>
+              <th>Annual A</th>
+              <th>Annual V</th>
               <th>Annual</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <th>Forecast</th>
-              {data.map((row) => (
-                <td key={`${row.month}-forecast`}>{formatK(row.forecast)}</td>
-              ))}
-              <td className="bowling-total-cell">{formatK(annualForecast)}</td>
-            </tr>
-            <tr>
-              <th>Actual</th>
-              {data.map((row) => (
-                <td key={`${row.month}-actual`}>{formatK(row.actual)}</td>
-              ))}
-              <td className="bowling-total-cell">{formatK(annualActual)}</td>
-            </tr>
-            <tr>
-              <th>Variance</th>
-              {data.map((row) => (
-                <td key={`${row.month}-variance`} className={row.variance > 0 ? "bowling-over" : "bowling-under"}>
-                  {formatK(row.variance)}
-                </td>
-              ))}
-              <td className={`bowling-total-cell ${annualVariance > 0 ? "bowling-over" : "bowling-under"}`}>
-                {formatK(annualVariance)}
-              </td>
-            </tr>
-            <tr>
-              <th>Score</th>
-              {data.map((row) => {
-                const mark = getBowlingStatusMark(row);
+            {rows.map((row) => {
+              const annualMark = getBowlingStatusMark({
+                forecast: row.annualForecast,
+                variance: row.annualVariance,
+              });
+
+              return (
+                <tr key={`${row.scope}-${row.category}-${row.allocation}`}>
+                  <th>{row.scope}</th>
+                  <td>{row.category}</td>
+                  <td>{row.allocation}</td>
+                  {row.months.map((monthRow) => {
+                    const mark = getBowlingStatusMark(monthRow);
+
+                    return (
+                      <td key={`${row.scope}-${row.category}-${row.allocation}-${monthRow.month}`}>
+                        <span
+                          className={`bowling-mark ${mark.className}`}
+                          title={`Forecast ${formatTooltipDollar(monthRow.forecast)} | Actual ${formatTooltipDollar(monthRow.actual)} | Variance ${formatTooltipDollar(monthRow.variance)}`}
+                        >
+                          {mark.label}
+                        </span>
+                      </td>
+                    );
+                  })}
+                  <td className="bowling-total-cell">{formatK(row.annualForecast)}</td>
+                  <td className="bowling-total-cell">{formatK(row.annualActual)}</td>
+                  <td className={`bowling-total-cell ${row.annualVariance > 0 ? "bowling-over" : "bowling-under"}`}>
+                    {formatK(row.annualVariance)}
+                  </td>
+                  <td className="bowling-total-cell">
+                    <span className={`bowling-mark ${annualMark.className}`}>{annualMark.label}</span>
+                  </td>
+                </tr>
+              );
+            })}
+            <tr className="bowling-grand-total-row">
+              <th colSpan={3}>Grand Total</th>
+              {monthlyTotals.map((monthRow) => {
+                const mark = getBowlingStatusMark(monthRow);
 
                 return (
-                  <td key={`${row.month}-score`}>
-                    <span className={`bowling-mark ${mark.className}`}>{mark.label}</span>
+                  <td key={`grand-${monthRow.month}`}>
+                    <span
+                      className={`bowling-mark ${mark.className}`}
+                      title={`Forecast ${formatTooltipDollar(monthRow.forecast)} | Actual ${formatTooltipDollar(monthRow.actual)} | Variance ${formatTooltipDollar(monthRow.variance)}`}
+                    >
+                      {mark.label}
+                    </span>
                   </td>
                 );
               })}
+              <td className="bowling-total-cell">{formatK(totalAnnualForecast)}</td>
+              <td className="bowling-total-cell">{formatK(totalAnnualActual)}</td>
+              <td className={`bowling-total-cell ${totalAnnualVariance > 0 ? "bowling-over" : "bowling-under"}`}>
+                {formatK(totalAnnualVariance)}
+              </td>
               <td className="bowling-total-cell">
-                <span className={`bowling-mark ${annualMark.className}`}>{annualMark.label}</span>
+                <span
+                  className={`bowling-mark ${getBowlingStatusMark({ forecast: totalAnnualForecast, variance: totalAnnualVariance }).className}`}
+                >
+                  {getBowlingStatusMark({ forecast: totalAnnualForecast, variance: totalAnnualVariance }).label}
+                </span>
               </td>
             </tr>
           </tbody>
@@ -336,6 +429,7 @@ export default function Charts({ budget }) {
 
   const monthlyRows = buildMonthlyRows(budget);
   const categoryRows = buildCategoryRows(budget);
+  const bowlingRows = buildBowlingBreakdownRows(budget);
 
   return (
     <section className="charts-panel">
@@ -381,8 +475,8 @@ export default function Charts({ budget }) {
         )}
         {activeTab === "bowling-table" && (
           <>
-            <p className="chart-body-desc">Bowling-style monthly scorecard where each month acts like a frame against forecast targets.</p>
-            <BowlingTableChart data={monthlyRows} />
+            <p className="chart-body-desc">Bowling-style monthly scorecard split by Expense, Capital, and Total with cost-category and allocation breakdowns.</p>
+            <BowlingTableChart rows={bowlingRows} />
           </>
         )}
       </div>
