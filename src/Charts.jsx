@@ -222,6 +222,105 @@ function MonthlyBarChart({ data }) {
   );
 }
 
+function getBowlingStatusMark(row) {
+  if (row.forecast <= 0) {
+    return { label: "N/A", className: "bowling-mark-na" };
+  }
+
+  const varianceRatio = row.variance / row.forecast;
+
+  if (varianceRatio <= -0.05) {
+    return { label: "X", className: "bowling-mark-strike" };
+  }
+
+  if (varianceRatio < 0) {
+    return { label: "/", className: "bowling-mark-spare" };
+  }
+
+  if (varianceRatio <= 0.03) {
+    return { label: "|", className: "bowling-mark-even" };
+  }
+
+  return { label: "-", className: "bowling-mark-open" };
+}
+
+function BowlingTableChart({ data }) {
+  const annualForecast = data.reduce((total, row) => total + row.forecast, 0);
+  const annualActual = data.reduce((total, row) => total + row.actual, 0);
+  const annualVariance = annualActual - annualForecast;
+  const annualMark = getBowlingStatusMark({
+    forecast: annualForecast,
+    variance: annualVariance,
+  });
+
+  return (
+    <div className="bowling-wrap">
+      <div className="bowling-legend">
+        <span><strong>X</strong> strong under forecast</span>
+        <span><strong>/</strong> slightly under forecast</span>
+        <span><strong>|</strong> on plan (+/-3%)</span>
+        <span><strong>-</strong> over forecast</span>
+      </div>
+
+      <div className="bowling-scroll">
+        <table className="bowling-table">
+          <thead>
+            <tr>
+              <th>Frame</th>
+              {data.map((row) => (
+                <th key={row.month}>{row.month}</th>
+              ))}
+              <th>Annual</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th>Forecast</th>
+              {data.map((row) => (
+                <td key={`${row.month}-forecast`}>{formatK(row.forecast)}</td>
+              ))}
+              <td className="bowling-total-cell">{formatK(annualForecast)}</td>
+            </tr>
+            <tr>
+              <th>Actual</th>
+              {data.map((row) => (
+                <td key={`${row.month}-actual`}>{formatK(row.actual)}</td>
+              ))}
+              <td className="bowling-total-cell">{formatK(annualActual)}</td>
+            </tr>
+            <tr>
+              <th>Variance</th>
+              {data.map((row) => (
+                <td key={`${row.month}-variance`} className={row.variance > 0 ? "bowling-over" : "bowling-under"}>
+                  {formatK(row.variance)}
+                </td>
+              ))}
+              <td className={`bowling-total-cell ${annualVariance > 0 ? "bowling-over" : "bowling-under"}`}>
+                {formatK(annualVariance)}
+              </td>
+            </tr>
+            <tr>
+              <th>Score</th>
+              {data.map((row) => {
+                const mark = getBowlingStatusMark(row);
+
+                return (
+                  <td key={`${row.month}-score`}>
+                    <span className={`bowling-mark ${mark.className}`}>{mark.label}</span>
+                  </td>
+                );
+              })}
+              <td className="bowling-total-cell">
+                <span className={`bowling-mark ${annualMark.className}`}>{annualMark.label}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 
 // ─── Tab bar + outer shell ───────────────────────────────────────────────────
 
@@ -229,6 +328,7 @@ const CHART_TABS = [
   { id: "line", label: "Line — Monthly Trend" },
   { id: "bar-monthly", label: "Bar — Monthly Breakdown" },
   { id: "bar-category", label: "Bar — Category Breakdown" },
+  { id: "bowling-table", label: "Table — Bowling Style" },
 ];
 
 export default function Charts({ budget }) {
@@ -277,6 +377,12 @@ export default function Charts({ budget }) {
           <>
             <p className="chart-body-desc">Annual forecast vs actual broken down by cost type and category. Variance bars highlight over/under positions.</p>
             <CategoryBarChart data={categoryRows} />
+          </>
+        )}
+        {activeTab === "bowling-table" && (
+          <>
+            <p className="chart-body-desc">Bowling-style monthly scorecard where each month acts like a frame against forecast targets.</p>
+            <BowlingTableChart data={monthlyRows} />
           </>
         )}
       </div>

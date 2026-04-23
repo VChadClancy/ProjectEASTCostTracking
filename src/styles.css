@@ -571,8 +571,120 @@ td input {
   font-size: 1rem;
 }
 
+.bowling-wrap {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.bowling-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem 1.1rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.bowling-legend strong {
+  color: var(--ink);
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.bowling-scroll {
+  overflow-x: auto;
+}
+
+.bowling-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 980px;
+  font-size: 0.9rem;
+}
+
+.bowling-table th,
+.bowling-table td {
+  border: 1px solid var(--line);
+  padding: 0.7rem 0.5rem;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.bowling-table thead th {
+  background: rgba(24, 33, 38, 0.06);
+  font-family: "IBM Plex Mono", monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.78rem;
+}
+
+.bowling-table tbody th {
+  text-align: left;
+  background: rgba(24, 33, 38, 0.04);
+  font-weight: 600;
+  min-width: 8rem;
+}
+
+.bowling-total-cell {
+  background: rgba(24, 33, 38, 0.08) !important;
+  font-weight: 700;
+}
+
+.bowling-over {
+  color: var(--danger);
+}
+
+.bowling-under {
+  color: var(--success);
+}
+
+.bowling-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.bowling-mark-strike {
+  color: var(--success);
+  background: rgba(38, 98, 75, 0.12);
+  border-color: rgba(38, 98, 75, 0.24);
+}
+
+.bowling-mark-spare {
+  color: #2f6b56;
+  background: rgba(73, 114, 97, 0.15);
+  border-color: rgba(73, 114, 97, 0.28);
+}
+
+.bowling-mark-even {
+  color: #6a552e;
+  background: rgba(181, 142, 79, 0.2);
+  border-color: rgba(181, 142, 79, 0.35);
+}
+
+.bowling-mark-open {
+  color: var(--danger);
+  background: rgba(163, 57, 46, 0.12);
+  border-color: rgba(163, 57, 46, 0.25);
+}
+
+.bowling-mark-na {
+  color: var(--muted);
+  background: rgba(24, 33, 38, 0.1);
+  border-color: rgba(24, 33, 38, 0.16);
+}
+
 @media (max-width: 900px) {
   .charts-header {
     flex-direction: column;
+  }
+
+  .bowling-legend {
+    font-size: 0.78rem;
   }
 }
