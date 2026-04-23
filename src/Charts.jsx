@@ -5,15 +5,12 @@ import {
   Line,
   BarChart,
   Bar,
-  ScatterChart,
-  Scatter,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
   ReferenceLine,
-  ZAxis,
 } from "recharts";
 
 const MONTHS = [
@@ -100,23 +97,6 @@ function buildCategoryRows(budget) {
       };
     })
   );
-}
-
-function buildBubbleData(budget) {
-  return MONTHS.map((month, index) => {
-    const forecast = sumNode(budget[month], "forecast");
-    const actual = sumNode(budget[month], "actual");
-    const variance = actual - forecast;
-
-    return {
-      month,
-      index,
-      forecast,
-      actual,
-      variance,
-      bubbleSize: Math.max(Math.abs(variance) / 500, 200),
-    };
-  });
 }
 
 // ─── Chart type components ──────────────────────────────────────────────────
@@ -242,73 +222,6 @@ function MonthlyBarChart({ data }) {
   );
 }
 
-function VarianceBubbleChart({ data }) {
-  const overBudget = data.filter((d) => d.variance >= 0);
-  const underBudget = data.filter((d) => d.variance < 0);
-
-  return (
-    <div>
-      <p className="chart-note">
-        Each bubble represents one month. Bubble size reflects the absolute variance magnitude. Red = over budget, green = under budget.
-      </p>
-      <ResponsiveContainer width="100%" height={380}>
-        <ScatterChart margin={{ top: 8, right: 32, bottom: 8, left: 20 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(24,33,38,0.08)" />
-          <XAxis
-            type="number"
-            dataKey="forecast"
-            name="Forecast"
-            tickFormatter={formatK}
-            tick={{ fontSize: 12 }}
-            label={{ value: "Forecast", position: "insideBottom", offset: -4, fontSize: 12 }}
-            height={44}
-            width={70}
-          />
-          <YAxis
-            type="number"
-            dataKey="actual"
-            name="Actual"
-            tickFormatter={formatK}
-            tick={{ fontSize: 12 }}
-            width={70}
-            label={{ value: "Actual", angle: -90, position: "insideLeft", fontSize: 12 }}
-          />
-          <ZAxis type="number" dataKey="bubbleSize" range={[200, 2400]} />
-          <Tooltip
-            cursor={false}
-            content={({ payload }) => {
-              if (!payload?.length) return null;
-              const d = payload[0].payload;
-
-              return (
-                <div className="chart-tooltip">
-                  <strong>{d.month}</strong>
-                  <span>Forecast: {formatTooltipDollar(d.forecast)}</span>
-                  <span>Actual: {formatTooltipDollar(d.actual)}</span>
-                  <span style={{ color: d.variance >= 0 ? "#a3392e" : "#26624b" }}>
-                    Variance: {formatTooltipDollar(d.variance)}
-                  </span>
-                </div>
-              );
-            }}
-          />
-          <Legend wrapperStyle={{ fontSize: 13, paddingTop: "1rem" }} />
-          <ReferenceLine
-            segment={[
-              { x: Math.min(...data.map((d) => d.forecast)), y: Math.min(...data.map((d) => d.forecast)) },
-              { x: Math.max(...data.map((d) => d.forecast)), y: Math.max(...data.map((d) => d.forecast)) },
-            ]}
-            stroke="rgba(24,33,38,0.2)"
-            strokeDasharray="4 3"
-            label={{ value: "Break-even", fontSize: 11, fill: "rgba(24,33,38,0.45)" }}
-          />
-          <Scatter name="Over Budget" data={overBudget} fill={PALETTE.varianceLine} fillOpacity={0.6} />
-          <Scatter name="Under Budget" data={underBudget} fill={PALETTE.actualAll} fillOpacity={0.6} />
-        </ScatterChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
 
 // ─── Tab bar + outer shell ───────────────────────────────────────────────────
 
@@ -316,7 +229,6 @@ const CHART_TABS = [
   { id: "line", label: "Line — Monthly Trend" },
   { id: "bar-monthly", label: "Bar — Monthly Breakdown" },
   { id: "bar-category", label: "Bar — Category Breakdown" },
-  { id: "bubble", label: "Bubble — Variance" },
 ];
 
 export default function Charts({ budget }) {
@@ -324,7 +236,6 @@ export default function Charts({ budget }) {
 
   const monthlyRows = buildMonthlyRows(budget);
   const categoryRows = buildCategoryRows(budget);
-  const bubbleData = buildBubbleData(budget);
 
   return (
     <section className="charts-panel">
@@ -367,9 +278,6 @@ export default function Charts({ budget }) {
             <p className="chart-body-desc">Annual forecast vs actual broken down by cost type and category. Variance bars highlight over/under positions.</p>
             <CategoryBarChart data={categoryRows} />
           </>
-        )}
-        {activeTab === "bubble" && (
-          <VarianceBubbleChart data={bubbleData} />
         )}
       </div>
     </section>
