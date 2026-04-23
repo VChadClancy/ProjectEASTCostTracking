@@ -1,5 +1,6 @@
 import React from "react";
 import * as XLSX from "xlsx";
+import Charts from "./Charts";
 
 const MONTHS = [
   "Jan",
@@ -467,6 +468,8 @@ function App() {
           })}
         </div>
       </section>
+
+      <Charts budget={budget} />
 
       <section className="month-jump-list" aria-label="Monthly jump links">
         {MONTHS.map((month) => (
