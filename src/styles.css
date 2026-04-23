@@ -132,6 +132,13 @@ input {
   min-width: 16rem;
 }
 
+.hero-button-group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
 .secondary-button {
   padding: 0.8rem 1.15rem;
   border: 1px solid var(--line);
@@ -144,6 +151,22 @@ input {
 .secondary-button:hover {
   transform: translateY(-1px);
   background: white;
+}
+
+.primary-button {
+  padding: 0.8rem 1.15rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), #b5562d);
+  color: #fffaf3;
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+  box-shadow: 0 10px 20px rgba(201, 106, 61, 0.22);
+}
+
+.primary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 24px rgba(201, 106, 61, 0.28);
 }
 
 .hero-note {
@@ -388,6 +411,10 @@ td input {
     align-items: flex-start;
     justify-items: start;
     text-align: left;
+  }
+
+  .hero-button-group {
+    justify-content: flex-start;
   }
 }
 

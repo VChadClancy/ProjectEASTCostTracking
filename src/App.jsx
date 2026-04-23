@@ -1,3 +1,6 @@
+import React from "react";
+import * as XLSX from "xlsx";
+
 const MONTHS = [
   "Jan",
   "Feb",
@@ -90,6 +93,186 @@ function formatShare(value, total) {
   return `${Math.round((value / total) * 100)}%`;
 }
 
+function createFileSafeName(value) {
+  return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "project-budget";
+}
+
+function getRollupValue(budget, metric, month, costType, categoryKey, owner) {
+  if (!month) {
+    return MONTHS.reduce(
+      (total, currentMonth) => total + getRollupValue(budget, metric, currentMonth, costType, categoryKey, owner),
+      0
+    );
+  }
+
+  if (!costType) {
+    return sumNode(budget[month], metric);
+  }
+
+  if (!categoryKey) {
+    return sumNode(budget[month][costType], metric);
+  }
+
+  const categoryNode = budget[month][costType][categoryKey];
+
+  if (!owner) {
+    return sumNode(categoryNode, metric);
+  }
+
+  return categoryNode[owner][metric];
+}
+
+function createAnnualRollupRows(budget) {
+  const rows = [
+    {
+      Level: "Grand Total",
+      Period: "Annual",
+      "Cost Type": "All",
+      Category: "All",
+      Allocation: "All",
+      Forecast: getRollupValue(budget, "forecast"),
+      Actual: getRollupValue(budget, "actual"),
+    },
+  ];
+
+  COST_TYPES.forEach((costType) => {
+    rows.push({
+      Level: "Type Total",
+      Period: "Annual",
+      "Cost Type": costType,
+      Category: "All",
+      Allocation: "All",
+      Forecast: getRollupValue(budget, "forecast", null, costType),
+      Actual: getRollupValue(budget, "actual", null, costType),
+    });
+
+    CATEGORY_CONFIG.forEach((category) => {
+      rows.push({
+        Level: "Category Subtotal",
+        Period: "Annual",
+        "Cost Type": costType,
+        Category: category.label,
+        Allocation: "All",
+        Forecast: getRollupValue(budget, "forecast", null, costType, category.key),
+        Actual: getRollupValue(budget, "actual", null, costType, category.key),
+      });
+
+      if (category.owners) {
+        category.owners.forEach((owner) => {
+          rows.push({
+            Level: "Detail",
+            Period: "Annual",
+            "Cost Type": costType,
+            Category: category.label,
+            Allocation: owner,
+            Forecast: getRollupValue(budget, "forecast", null, costType, category.key, owner),
+            Actual: getRollupValue(budget, "actual", null, costType, category.key, owner),
+          });
+        });
+
+        return;
+      }
+
+      rows.push({
+        Level: "Detail",
+        Period: "Annual",
+        "Cost Type": costType,
+        Category: category.label,
+        Allocation: "Direct",
+        Forecast: getRollupValue(budget, "forecast", null, costType, category.key),
+        Actual: getRollupValue(budget, "actual", null, costType, category.key),
+      });
+    });
+  });
+
+  return rows.map((row) => ({
+    ...row,
+    Variance: row.Actual - row.Forecast,
+  }));
+}
+
+function createMonthlyRollupRows(budget) {
+  return MONTHS.flatMap((month) => {
+    const rows = [
+      {
+        Level: "Month Total",
+        Period: month,
+        "Cost Type": "All",
+        Category: "All",
+        Allocation: "All",
+        Forecast: getRollupValue(budget, "forecast", month),
+        Actual: getRollupValue(budget, "actual", month),
+      },
+    ];
+
+    COST_TYPES.forEach((costType) => {
+      rows.push({
+        Level: "Type Total",
+        Period: month,
+        "Cost Type": costType,
+        Category: "All",
+        Allocation: "All",
+        Forecast: getRollupValue(budget, "forecast", month, costType),
+        Actual: getRollupValue(budget, "actual", month, costType),
+      });
+
+      CATEGORY_CONFIG.forEach((category) => {
+        rows.push({
+          Level: "Category Subtotal",
+          Period: month,
+          "Cost Type": costType,
+          Category: category.label,
+          Allocation: "All",
+          Forecast: getRollupValue(budget, "forecast", month, costType, category.key),
+          Actual: getRollupValue(budget, "actual", month, costType, category.key),
+        });
+
+        if (category.owners) {
+          category.owners.forEach((owner) => {
+            rows.push({
+              Level: "Detail",
+              Period: month,
+              "Cost Type": costType,
+              Category: category.label,
+              Allocation: owner,
+              Forecast: getRollupValue(budget, "forecast", month, costType, category.key, owner),
+              Actual: getRollupValue(budget, "actual", month, costType, category.key, owner),
+            });
+          });
+
+          return;
+        }
+
+        rows.push({
+          Level: "Detail",
+          Period: month,
+          "Cost Type": costType,
+          Category: category.label,
+          Allocation: "Direct",
+          Forecast: getRollupValue(budget, "forecast", month, costType, category.key),
+          Actual: getRollupValue(budget, "actual", month, costType, category.key),
+        });
+      });
+    });
+
+    return rows.map((row) => ({
+      ...row,
+      Variance: row.Actual - row.Forecast,
+    }));
+  });
+}
+
+function downloadFile(fileContent, fileName, mimeType) {
+  const blob = new Blob([fileContent], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 function varianceClassName(variance) {
   if (variance > 0) {
     return "variance variance-over";
@@ -114,6 +297,8 @@ function App() {
   const capitalActual = MONTHS.reduce((total, month) => total + sumNode(budget[month].Capital, "actual"), 0);
   const expenseForecast = MONTHS.reduce((total, month) => total + sumNode(budget[month].Expense, "forecast"), 0);
   const expenseActual = MONTHS.reduce((total, month) => total + sumNode(budget[month].Expense, "actual"), 0);
+  const annualRollupRows = createAnnualRollupRows(budget);
+  const monthlyRollupRows = createMonthlyRollupRows(budget);
 
   function updateValue(month, costType, categoryKey, owner, metric, nextValue) {
     const parsedValue = Number(nextValue);
@@ -146,6 +331,40 @@ function App() {
     setBudget(createInitialBudget());
   }
 
+  function exportCsv() {
+    const fileBaseName = createFileSafeName(projectName);
+    const combinedRows = [
+      ...annualRollupRows.map((row) => ({ Scope: "Annual", ...row })),
+      ...monthlyRollupRows.map((row) => ({ Scope: "Monthly", ...row })),
+    ];
+    const worksheet = XLSX.utils.json_to_sheet(combinedRows, {
+      header: ["Scope", "Level", "Period", "Cost Type", "Category", "Allocation", "Forecast", "Actual", "Variance"],
+    });
+    const csvContent = XLSX.utils.sheet_to_csv(worksheet);
+
+    downloadFile(csvContent, `${fileBaseName}-rollups.csv`, "text/csv;charset=utf-8;");
+  }
+
+  function exportExcel() {
+    const fileBaseName = createFileSafeName(projectName);
+    const workbook = XLSX.utils.book_new();
+    const annualWorksheet = XLSX.utils.json_to_sheet(annualRollupRows, {
+      header: ["Level", "Period", "Cost Type", "Category", "Allocation", "Forecast", "Actual", "Variance"],
+    });
+    const monthlyWorksheet = XLSX.utils.json_to_sheet(monthlyRollupRows, {
+      header: ["Level", "Period", "Cost Type", "Category", "Allocation", "Forecast", "Actual", "Variance"],
+    });
+
+    XLSX.utils.book_append_sheet(workbook, annualWorksheet, "Annual Rollup");
+    XLSX.utils.book_append_sheet(workbook, monthlyWorksheet, "Monthly Rollup");
+
+    downloadFile(
+      XLSX.write(workbook, { bookType: "xlsx", type: "array" }),
+      `${fileBaseName}-rollups.xlsx`,
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+  }
+
   return (
     <div className="app-shell">
       <header className="hero-panel">
@@ -163,11 +382,19 @@ function App() {
           </p>
         </div>
         <div className="hero-actions">
-          <button type="button" className="secondary-button" onClick={resetBudget}>
-            Reset sample data
-          </button>
+          <div className="hero-button-group">
+            <button type="button" className="secondary-button" onClick={resetBudget}>
+              Reset sample data
+            </button>
+            <button type="button" className="secondary-button" onClick={exportCsv}>
+              Export CSV
+            </button>
+            <button type="button" className="primary-button" onClick={exportExcel}>
+              Export Excel
+            </button>
+          </div>
           <div className="hero-note">
-            <span>Allocation splits</span>
+            <span>Exports include annual and monthly rollups</span>
             <strong>Business, Eaton IT, External IT</strong>
           </div>
         </div>

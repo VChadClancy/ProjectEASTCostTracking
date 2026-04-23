@@ -9,6 +9,8 @@ Project Cost Tracker for monthly forecast-versus-actual tracking across Capital 
 - Category tracking for Labor, T&E, and Software
 - Allocation detail for Business, Eaton IT, and External IT on Labor and T&E
 - Automatic annual and monthly rollups with variance calculations
+- CSV export for combined annual and monthly rollups
+- Excel export with separate Annual Rollup and Monthly Rollup sheets
 
 ## Run locally
 
