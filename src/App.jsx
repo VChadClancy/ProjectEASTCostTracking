@@ -270,8 +270,12 @@ function downloadFile(fileContent, fileName, mimeType) {
 
   link.href = url;
   link.download = fileName;
+  document.body.appendChild(link);
   link.click();
-  URL.revokeObjectURL(url);
+  document.body.removeChild(link);
+
+  // Revoke on the next task so the browser can finish the download first.
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 function varianceClassName(variance) {
@@ -359,11 +363,7 @@ function App() {
     XLSX.utils.book_append_sheet(workbook, annualWorksheet, "Annual Rollup");
     XLSX.utils.book_append_sheet(workbook, monthlyWorksheet, "Monthly Rollup");
 
-    downloadFile(
-      XLSX.write(workbook, { bookType: "xlsx", type: "array" }),
-      `${fileBaseName}-rollups.xlsx`,
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
+    XLSX.writeFile(workbook, `${fileBaseName}-rollups.xlsx`);
   }
 
   return (
