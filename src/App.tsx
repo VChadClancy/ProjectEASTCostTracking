@@ -2,237 +2,20 @@ import React from "react";
 import * as XLSX from "xlsx";
 import Charts from "./Charts";
 import { MONTHS, COST_TYPES, OWNERS, CATEGORY_CONFIG, SAMPLE_BASES } from "./features/financials/financialConfig";
-
-function createMetricPair(baseValue, monthIndex, offset) {
-  const forecast = Math.round(baseValue * (1 + monthIndex * 0.015 + offset));
-  const actual = Math.round(forecast * (0.95 + (monthIndex % 4) * 0.02));
-
-  return { forecast, actual };
-}
-
-function createInitialBudget() {
-  return MONTHS.reduce((months, month, monthIndex) => {
-    months[month] = COST_TYPES.reduce((types, costType) => {
-      types[costType] = CATEGORY_CONFIG.reduce((categories, category, categoryIndex) => {
-        const baseValue = SAMPLE_BASES[costType][category.key];
-
-        if (category.owners) {
-          categories[category.key] = category.owners.reduce((owners, owner, ownerIndex) => {
-            owners[owner] = createMetricPair(baseValue[owner], monthIndex, (categoryIndex + ownerIndex) * 0.01);
-            return owners;
-          }, {});
-        } else {
-          categories[category.key] = createMetricPair(baseValue, monthIndex, categoryIndex * 0.015);
-        }
-
-        return categories;
-      }, {});
-
-      return types;
-    }, {});
-
-    return months;
-  }, {});
-}
-
-function sumNode(node, metric) {
-  if (typeof node?.[metric] === "number") {
-    return node[metric];
-  }
-
-  return Object.values(node ?? {}).reduce((total, child) => total + sumNode(child, metric), 0);
-}
-
-function formatCurrency(value) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-function formatShare(value, total) {
-  if (total <= 0) {
-    return "0%";
-  }
-
-  return `${Math.round((value / total) * 100)}%`;
-}
+import {
+  createMetricPair,
+  createInitialBudget,
+  sumNode,
+  formatCurrency,
+  formatShare,
+  getRollupValue,
+  createAnnualRollupRows,
+  createMonthlyRollupRows,
+  varianceClassName,
+} from "./features/financials/financialCalculations";
 
 function createFileSafeName(value) {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "project-budget";
-}
-
-function getRollupValue(
-  budget: any,
-  metric: string,
-  month: string | null = null,
-  costType: string | null = null,
-  categoryKey: string | null = null,
-  owner: string | null = null
-) {
-  if (!month) {
-    return MONTHS.reduce(
-      (total, currentMonth) => total + getRollupValue(budget, metric, currentMonth, costType, categoryKey, owner),
-      0
-    );
-  }
-
-  if (!costType) {
-    return sumNode(budget[month], metric);
-  }
-
-  if (!categoryKey) {
-    return sumNode(budget[month][costType], metric);
-  }
-
-  const categoryNode = budget[month][costType][categoryKey];
-
-  if (!owner) {
-    return sumNode(categoryNode, metric);
-  }
-
-  return categoryNode[owner][metric];
-}
-
-function createAnnualRollupRows(budget) {
-  const rows = [
-    {
-      Level: "Grand Total",
-      Period: "Annual",
-      "Cost Type": "All",
-      Category: "All",
-      Allocation: "All",
-      Forecast: getRollupValue(budget, "forecast"),
-      Actual: getRollupValue(budget, "actual"),
-    },
-  ];
-
-  COST_TYPES.forEach((costType) => {
-    rows.push({
-      Level: "Type Total",
-      Period: "Annual",
-      "Cost Type": costType,
-      Category: "All",
-      Allocation: "All",
-      Forecast: getRollupValue(budget, "forecast", null, costType),
-      Actual: getRollupValue(budget, "actual", null, costType),
-    });
-
-    CATEGORY_CONFIG.forEach((category) => {
-      rows.push({
-        Level: "Category Subtotal",
-        Period: "Annual",
-        "Cost Type": costType,
-        Category: category.label,
-        Allocation: "All",
-        Forecast: getRollupValue(budget, "forecast", null, costType, category.key),
-        Actual: getRollupValue(budget, "actual", null, costType, category.key),
-      });
-
-      if (category.owners) {
-        category.owners.forEach((owner) => {
-          rows.push({
-            Level: "Detail",
-            Period: "Annual",
-            "Cost Type": costType,
-            Category: category.label,
-            Allocation: owner,
-            Forecast: getRollupValue(budget, "forecast", null, costType, category.key, owner),
-            Actual: getRollupValue(budget, "actual", null, costType, category.key, owner),
-          });
-        });
-
-        return;
-      }
-
-      rows.push({
-        Level: "Detail",
-        Period: "Annual",
-        "Cost Type": costType,
-        Category: category.label,
-        Allocation: "Direct",
-        Forecast: getRollupValue(budget, "forecast", null, costType, category.key),
-        Actual: getRollupValue(budget, "actual", null, costType, category.key),
-      });
-    });
-  });
-
-  return rows.map((row) => ({
-    ...row,
-    Variance: row.Actual - row.Forecast,
-  }));
-}
-
-function createMonthlyRollupRows(budget) {
-  return MONTHS.flatMap((month) => {
-    const rows = [
-      {
-        Level: "Month Total",
-        Period: month,
-        "Cost Type": "All",
-        Category: "All",
-        Allocation: "All",
-        Forecast: getRollupValue(budget, "forecast", month),
-        Actual: getRollupValue(budget, "actual", month),
-      },
-    ];
-
-    COST_TYPES.forEach((costType) => {
-      rows.push({
-        Level: "Type Total",
-        Period: month,
-        "Cost Type": costType,
-        Category: "All",
-        Allocation: "All",
-        Forecast: getRollupValue(budget, "forecast", month, costType),
-        Actual: getRollupValue(budget, "actual", month, costType),
-      });
-
-      CATEGORY_CONFIG.forEach((category) => {
-        rows.push({
-          Level: "Category Subtotal",
-          Period: month,
-          "Cost Type": costType,
-          Category: category.label,
-          Allocation: "All",
-          Forecast: getRollupValue(budget, "forecast", month, costType, category.key),
-          Actual: getRollupValue(budget, "actual", month, costType, category.key),
-        });
-
-        if (category.owners) {
-          category.owners.forEach((owner) => {
-            rows.push({
-              Level: "Detail",
-              Period: month,
-              "Cost Type": costType,
-              Category: category.label,
-              Allocation: owner,
-              Forecast: getRollupValue(budget, "forecast", month, costType, category.key, owner),
-              Actual: getRollupValue(budget, "actual", month, costType, category.key, owner),
-            });
-          });
-
-          return;
-        }
-
-        rows.push({
-          Level: "Detail",
-          Period: month,
-          "Cost Type": costType,
-          Category: category.label,
-          Allocation: "Direct",
-          Forecast: getRollupValue(budget, "forecast", month, costType, category.key),
-          Actual: getRollupValue(budget, "actual", month, costType, category.key),
-        });
-      });
-    });
-
-    return rows.map((row) => ({
-      ...row,
-      Variance: row.Actual - row.Forecast,
-    }));
-  });
 }
 
 function downloadFile(fileContent, fileName, mimeType) {
@@ -248,18 +31,6 @@ function downloadFile(fileContent, fileName, mimeType) {
 
   // Revoke on the next task so the browser can finish the download first.
   setTimeout(() => URL.revokeObjectURL(url), 0);
-}
-
-function varianceClassName(variance) {
-  if (variance > 0) {
-    return "variance variance-over";
-  }
-
-  if (variance < 0) {
-    return "variance variance-under";
-  }
-
-  return "variance";
 }
 
 function App() {
@@ -556,33 +327,42 @@ function App() {
                               );
                             }
 
-                            return (
-                              <tr key={category.key}>
-                                <td data-label="Category">{category.label}</td>
-                                <td data-label="Allocation">Direct</td>
-                                <td data-label="Forecast">
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    step="100"
-                                    value={categoryNode.forecast}
-                                    onChange={(event) => updateValue(month, costType, category.key, null, "forecast", event.target.value)}
-                                  />
-                                </td>
-                                <td data-label="Actual">
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    step="100"
-                                    value={categoryNode.actual}
-                                    onChange={(event) => updateValue(month, costType, category.key, null, "actual", event.target.value)}
-                                  />
-                                </td>
-                                <td data-label="Variance" className={varianceClassName(categoryVariance)}>
-                                  {formatCurrency(categoryVariance)}
-                                </td>
-                              </tr>
-                            );
+                            // Fix: Only access .forecast/.actual if not an owners category
+                            if (
+                              categoryNode &&
+                              typeof (categoryNode as any).forecast === "number" &&
+                              typeof (categoryNode as any).actual === "number"
+                            ) {
+                              const directNode = categoryNode as { forecast: number; actual: number };
+                              return (
+                                <tr key={category.key}>
+                                  <td data-label="Category">{category.label}</td>
+                                  <td data-label="Allocation">Direct</td>
+                                  <td data-label="Forecast">
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      step="100"
+                                      value={directNode.forecast}
+                                      onChange={(event) => updateValue(month, costType, category.key, null, "forecast", event.target.value)}
+                                    />
+                                  </td>
+                                  <td data-label="Actual">
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      step="100"
+                                      value={directNode.actual}
+                                      onChange={(event) => updateValue(month, costType, category.key, null, "actual", event.target.value)}
+                                    />
+                                  </td>
+                                  <td data-label="Variance" className={varianceClassName(categoryVariance)}>
+                                    {formatCurrency(categoryVariance)}
+                                  </td>
+                                </tr>
+                              );
+                            }
+                            return null;
                           })}
                         </tbody>
                       </table>
