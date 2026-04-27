@@ -1,42 +1,7 @@
 import React from "react";
 import * as XLSX from "xlsx";
 import Charts from "./Charts";
-
-const MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-
-const COST_TYPES = ["Capital", "Expense"];
-const OWNERS = ["Business", "Eaton IT", "External IT"];
-const CATEGORY_CONFIG = [
-  { key: "labor", label: "Labor", owners: OWNERS },
-  { key: "te", label: "T&E", owners: OWNERS },
-  { key: "software", label: "Software", owners: null },
-];
-
-const SAMPLE_BASES = {
-  Capital: {
-    labor: { Business: 12000, "Eaton IT": 16000, "External IT": 22000 },
-    te: { Business: 1800, "Eaton IT": 2300, "External IT": 3600 },
-    software: 9000,
-  },
-  Expense: {
-    labor: { Business: 9000, "Eaton IT": 13000, "External IT": 17500 },
-    te: { Business: 1400, "Eaton IT": 1900, "External IT": 2800 },
-    software: 7000,
-  },
-};
+import { MONTHS, COST_TYPES, OWNERS, CATEGORY_CONFIG, SAMPLE_BASES } from "./features/financials/financialConfig";
 
 function createMetricPair(baseValue, monthIndex, offset) {
   const forecast = Math.round(baseValue * (1 + monthIndex * 0.015 + offset));
