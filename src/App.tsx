@@ -1,7 +1,7 @@
 import React from "react";
 import * as XLSX from "xlsx";
 import Charts from "./Charts";
-import { MONTHS, COST_TYPES, OWNERS, CATEGORY_CONFIG, SAMPLE_BASES } from "./features/financials/financialConfig";
+import { MONTHS, COST_TYPES, OWNERS, CATEGORY_CONFIG } from "./features/financials/financialConfig";
 import {
   createMetricPair,
   createInitialBudget,
@@ -13,25 +13,7 @@ import {
   createMonthlyRollupRows,
   varianceClassName,
 } from "./features/financials/financialCalculations";
-
-function createFileSafeName(value) {
-  return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "project-budget";
-}
-
-function downloadFile(fileContent, fileName, mimeType) {
-  const blob = new Blob([fileContent], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-
-  // Revoke on the next task so the browser can finish the download first.
-  setTimeout(() => URL.revokeObjectURL(url), 0);
-}
+import { exportCsv, exportExcel } from "./features/financials/exportService";
 
 function App() {
   const [projectName, setProjectName] = React.useState("Project EAST Budget");
@@ -79,34 +61,12 @@ function App() {
     setBudget(createInitialBudget());
   }
 
-  function exportCsv() {
-    const fileBaseName = createFileSafeName(projectName);
-    const combinedRows = [
-      ...annualRollupRows.map((row) => ({ Scope: "Annual", ...row })),
-      ...monthlyRollupRows.map((row) => ({ Scope: "Monthly", ...row })),
-    ];
-    const worksheet = XLSX.utils.json_to_sheet(combinedRows, {
-      header: ["Scope", "Level", "Period", "Cost Type", "Category", "Allocation", "Forecast", "Actual", "Variance"],
-    });
-    const csvContent = XLSX.utils.sheet_to_csv(worksheet);
-
-    downloadFile(csvContent, `${fileBaseName}-rollups.csv`, "text/csv;charset=utf-8;");
+  function exportCsvHandler() {
+    exportCsv(projectName, annualRollupRows, monthlyRollupRows);
   }
 
-  function exportExcel() {
-    const fileBaseName = createFileSafeName(projectName);
-    const workbook = XLSX.utils.book_new();
-    const annualWorksheet = XLSX.utils.json_to_sheet(annualRollupRows, {
-      header: ["Level", "Period", "Cost Type", "Category", "Allocation", "Forecast", "Actual", "Variance"],
-    });
-    const monthlyWorksheet = XLSX.utils.json_to_sheet(monthlyRollupRows, {
-      header: ["Level", "Period", "Cost Type", "Category", "Allocation", "Forecast", "Actual", "Variance"],
-    });
-
-    XLSX.utils.book_append_sheet(workbook, annualWorksheet, "Annual Rollup");
-    XLSX.utils.book_append_sheet(workbook, monthlyWorksheet, "Monthly Rollup");
-
-    XLSX.writeFile(workbook, `${fileBaseName}-rollups.xlsx`);
+  function exportExcelHandler() {
+    exportExcel(projectName, annualRollupRows, monthlyRollupRows);
   }
 
   return (
@@ -130,10 +90,10 @@ function App() {
             <button type="button" className="secondary-button" onClick={resetBudget}>
               Reset sample data
             </button>
-            <button type="button" className="secondary-button" onClick={exportCsv}>
+            <button type="button" className="secondary-button" onClick={exportCsvHandler}>
               Export CSV
             </button>
-            <button type="button" className="primary-button" onClick={exportExcel}>
+            <button type="button" className="primary-button" onClick={exportExcelHandler}>
               Export Excel
             </button>
           </div>
