@@ -14,10 +14,11 @@ import {
   varianceClassName,
 } from "./features/financials/financialCalculations";
 import { exportCsv, exportExcel } from "./features/financials/exportService";
+import { getInitialBudget } from "./features/financials/financialService";
 
 function App() {
   const [projectName, setProjectName] = React.useState("Project EAST Budget");
-  const [budget, setBudget] = React.useState(() => createInitialBudget());
+  const [budget, setBudget] = React.useState(() => getInitialBudget());
 
   const annualForecast = MONTHS.reduce((total, month) => total + sumNode(budget[month], "forecast"), 0);
   const annualActual = MONTHS.reduce((total, month) => total + sumNode(budget[month], "actual"), 0);
@@ -58,7 +59,7 @@ function App() {
   }
 
   function resetBudget() {
-    setBudget(createInitialBudget());
+    setBudget(getInitialBudget());
   }
 
   function exportCsvHandler() {
