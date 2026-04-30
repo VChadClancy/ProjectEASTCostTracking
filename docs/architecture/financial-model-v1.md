@@ -64,5 +64,19 @@ The financial model supports enterprise budgeting and cost tracking for technolo
 - Expand cost categories and support for indirect costs.
 - Integrate with enterprise financial systems for reconciliation.
 
+## Program Model Types (Sprint 2 Preparation)
+To prepare for future enterprise program financial planning, the following model types have been introduced in the codebase (no UI or business logic changes yet):
+- **Program**
+- **Project**
+- **CAR** (Capital Appropriation Request)
+- **Workstream**
+- **FiscalYear**
+- **FiscalPeriod**
+- **ProgramStatus**
+- **ProjectStatus**
+- **ApprovalStatus**
+
+These types are designed to support future financial planning, reporting, and budgeting features. They include fields for IDs, names, descriptions, owners, start/end dates, status, fiscal year/period, and CAR financial amounts. This is a model preparation step only; no application behavior or UI is changed in this checkpoint.
+
 ---
 This note serves as a reference and guardrail for ongoing and future development. Any changes to the model should be reviewed against these principles and rules.
