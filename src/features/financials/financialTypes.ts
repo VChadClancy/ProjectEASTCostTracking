@@ -27,7 +27,10 @@ export type MetricPair = {
   actual: number;
 };
 
+export type BudgetStream = "Delivery" | "Run";
+
 // BudgetModel is a nested object: Month -> CostType -> CategoryKey -> (Owner? -> MetricPair | MetricPair)
+// For now, all categories are assumed to be Delivery stream by default.
 export type BudgetModel = {
   [month in Month]: {
     [costType in CostType]: {

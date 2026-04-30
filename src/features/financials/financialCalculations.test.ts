@@ -121,4 +121,10 @@ describe("financialCalculations", () => {
       expect(row.Actual).toBeDefined();
     });
   });
+
+  it("all current categories are classified as Delivery stream", () => {
+    CATEGORY_CONFIG.forEach((cat: any) => {
+      expect(cat.stream).toBe("Delivery");
+    });
+  });
 });

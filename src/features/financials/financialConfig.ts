@@ -4,6 +4,7 @@ import type {
   AllocationOwner,
   CostCategoryKey,
   BudgetModel,
+  BudgetStream,
 } from "./financialTypes";
 
 export const MONTHS: Month[] = [
@@ -14,11 +15,11 @@ export const COST_TYPES: CostType[] = ["Capital", "Expense"];
 
 export const OWNERS: AllocationOwner[] = ["Business", "Eaton IT", "External IT"];
 
-export const CATEGORY_CONFIG: { key: CostCategoryKey; label: string; owners: AllocationOwner[] | null }[] = [
-  { key: "labor", label: "Labor", owners: OWNERS },
-  { key: "te", label: "T&E", owners: OWNERS },
-  { key: "software", label: "Software", owners: null },
-  { key: "hardware", label: "Hardware", owners: null }, // Hardware is Direct only
+export const CATEGORY_CONFIG: { key: CostCategoryKey; label: string; owners: AllocationOwner[] | null; stream: BudgetStream }[] = [
+  { key: "labor", label: "Labor", owners: OWNERS, stream: "Delivery" },
+  { key: "te", label: "T&E", owners: OWNERS, stream: "Delivery" },
+  { key: "software", label: "Software", owners: null, stream: "Delivery" },
+  { key: "hardware", label: "Hardware", owners: null, stream: "Delivery" }, // Hardware is Direct only
 ];
 
 export const SAMPLE_BASES: Record<CostType, Record<string, any>> = {
