@@ -94,6 +94,21 @@ export function getRollupValue(
   return categoryNode[owner][metric];
 }
 
+function getStreamRollupValue(budget: any, metric: string, stream: "Delivery" | "Run", month: string | null = null) {
+  // Delivery: all Delivery categories, both Capital and Expense
+  // Run: all Run categories, Expense only
+  if (stream === "Delivery") {
+    return COST_TYPES.reduce((sum, costType) => {
+      return sum + CATEGORY_CONFIG.filter(c => c.stream === "Delivery")
+        .reduce((catSum, cat) => catSum + getRollupValue(budget, metric, month, costType, cat.key), 0);
+    }, 0);
+  } else {
+    // Run: Expense only
+    return CATEGORY_CONFIG.filter(c => c.stream === "Run")
+      .reduce((catSum, cat) => catSum + getRollupValue(budget, metric, month, "Expense", cat.key), 0);
+  }
+}
+
 export function createAnnualRollupRows(budget: any) {
   const rows = [
     {
@@ -104,6 +119,25 @@ export function createAnnualRollupRows(budget: any) {
       Allocation: "All",
       Forecast: getRollupValue(budget, "forecast"),
       Actual: getRollupValue(budget, "actual"),
+    },
+    // Budget Stream Totals
+    {
+      Level: "Budget Stream Total",
+      Period: "Annual",
+      "Cost Type": "All",
+      Category: "Delivery",
+      Allocation: "All",
+      Forecast: getStreamRollupValue(budget, "forecast", "Delivery"),
+      Actual: getStreamRollupValue(budget, "actual", "Delivery"),
+    },
+    {
+      Level: "Budget Stream Total",
+      Period: "Annual",
+      "Cost Type": "All",
+      Category: "Run",
+      Allocation: "All",
+      Forecast: getStreamRollupValue(budget, "forecast", "Run"),
+      Actual: getStreamRollupValue(budget, "actual", "Run"),
     },
   ];
   COST_TYPES.forEach((costType) => {
@@ -170,6 +204,25 @@ export function createMonthlyRollupRows(budget: any) {
         Allocation: "All",
         Forecast: getRollupValue(budget, "forecast", month),
         Actual: getRollupValue(budget, "actual", month),
+      },
+      // Budget Stream Totals
+      {
+        Level: "Budget Stream Total",
+        Period: month,
+        "Cost Type": "All",
+        Category: "Delivery",
+        Allocation: "All",
+        Forecast: getStreamRollupValue(budget, "forecast", "Delivery", month),
+        Actual: getStreamRollupValue(budget, "actual", "Delivery", month),
+      },
+      {
+        Level: "Budget Stream Total",
+        Period: month,
+        "Cost Type": "All",
+        Category: "Run",
+        Allocation: "All",
+        Forecast: getStreamRollupValue(budget, "forecast", "Run", month),
+        Actual: getStreamRollupValue(budget, "actual", "Run", month),
       },
     ];
     COST_TYPES.forEach((costType) => {

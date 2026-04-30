@@ -201,4 +201,56 @@ describe("financialCalculations", () => {
       });
     });
   });
+
+  it("annual rollup includes Delivery and Run stream totals and Delivery + Run = Grand Total", () => {
+    const budget = getBudget();
+    const annual = createAnnualRollupRows(budget);
+    const delivery = annual.find(row => row.Level === "Budget Stream Total" && row.Category === "Delivery");
+    const run = annual.find(row => row.Level === "Budget Stream Total" && row.Category === "Run");
+    const grandTotal = annual.find(row => row.Level === "Grand Total");
+    expect(delivery).toBeDefined();
+    expect(run).toBeDefined();
+    expect(grandTotal).toBeDefined();
+    if (delivery && run && grandTotal) {
+      expect(Number.isFinite(delivery.Forecast)).toBe(true);
+      expect(Number.isFinite(run.Forecast)).toBe(true);
+      expect(Number.isFinite(grandTotal.Forecast)).toBe(true);
+      expect(grandTotal.Forecast).toBeCloseTo(delivery.Forecast + run.Forecast);
+      expect(Number.isFinite(delivery.Actual)).toBe(true);
+      expect(Number.isFinite(run.Actual)).toBe(true);
+      expect(Number.isFinite(grandTotal.Actual)).toBe(true);
+      expect(grandTotal.Actual).toBeCloseTo(delivery.Actual + run.Actual);
+      expect(Number.isFinite(delivery.Variance)).toBe(true);
+      expect(Number.isFinite(run.Variance)).toBe(true);
+      expect(Number.isFinite(grandTotal.Variance)).toBe(true);
+      expect(grandTotal.Variance).toBeCloseTo(delivery.Variance + run.Variance);
+    }
+  });
+
+  it("monthly rollup includes Delivery and Run stream totals and Delivery + Run = Grand Total for each month", () => {
+    const budget = getBudget();
+    const monthly = createMonthlyRollupRows(budget);
+    MONTHS.forEach(month => {
+      const delivery = monthly.find(row => row.Level === "Budget Stream Total" && row.Category === "Delivery" && row.Period === month);
+      const run = monthly.find(row => row.Level === "Budget Stream Total" && row.Category === "Run" && row.Period === month);
+      const grandTotal = monthly.find(row => row.Level === "Month Total" && row.Period === month);
+      expect(delivery).toBeDefined();
+      expect(run).toBeDefined();
+      expect(grandTotal).toBeDefined();
+      if (delivery && run && grandTotal) {
+        expect(Number.isFinite(delivery.Forecast)).toBe(true);
+        expect(Number.isFinite(run.Forecast)).toBe(true);
+        expect(Number.isFinite(grandTotal.Forecast)).toBe(true);
+        expect(grandTotal.Forecast).toBeCloseTo(delivery.Forecast + run.Forecast);
+        expect(Number.isFinite(delivery.Actual)).toBe(true);
+        expect(Number.isFinite(run.Actual)).toBe(true);
+        expect(Number.isFinite(grandTotal.Actual)).toBe(true);
+        expect(grandTotal.Actual).toBeCloseTo(delivery.Actual + run.Actual);
+        expect(Number.isFinite(delivery.Variance)).toBe(true);
+        expect(Number.isFinite(run.Variance)).toBe(true);
+        expect(Number.isFinite(grandTotal.Variance)).toBe(true);
+        expect(grandTotal.Variance).toBeCloseTo(delivery.Variance + run.Variance);
+      }
+    });
+  });
 });
