@@ -12,14 +12,26 @@ export function createInitialBudget(): BudgetModel {
   return MONTHS.reduce((months, month, monthIndex) => {
     months[month] = COST_TYPES.reduce((types, costType) => {
       types[costType] = CATEGORY_CONFIG.reduce((categories, category, categoryIndex) => {
-        const baseValue = SAMPLE_BASES[costType][category.key];
-        if (category.owners) {
-          categories[category.key] = category.owners.reduce((owners, owner, ownerIndex) => {
-            owners[owner] = createMetricPair(baseValue[owner], monthIndex, (categoryIndex + ownerIndex) * 0.01);
-            return owners;
-          }, {});
-        } else {
-          categories[category.key] = createMetricPair(baseValue, monthIndex, categoryIndex * 0.015);
+        // Delivery categories: always present for both Capital and Expense
+        if (category.stream === "Delivery") {
+          const baseValue = SAMPLE_BASES[costType][category.key];
+          if (category.owners) {
+            categories[category.key] = category.owners.reduce((owners, owner, ownerIndex) => {
+              owners[owner] = createMetricPair(baseValue[owner], monthIndex, (categoryIndex + ownerIndex) * 0.01);
+              return owners;
+            }, {});
+          } else {
+            categories[category.key] = createMetricPair(baseValue, monthIndex, categoryIndex * 0.015);
+          }
+        } else if (category.stream === "Run") {
+          // Run categories: only real values for Expense, zero for Capital
+          if (costType === "Expense") {
+            const baseValue = SAMPLE_BASES.Expense[category.key];
+            categories[category.key] = createMetricPair(baseValue, monthIndex, categoryIndex * 0.015);
+          } else {
+            // Capital: zero-valued direct entry
+            categories[category.key] = { forecast: 0, actual: 0 };
+          }
         }
         return categories;
       }, {});
@@ -27,6 +39,10 @@ export function createInitialBudget(): BudgetModel {
     }, {});
     return months;
   }, {});
+}
+
+function safeNumber(val: any): number {
+  return Number.isFinite(val) ? val : 0;
 }
 
 export function sumNode(node: any, metric: string): number {
@@ -78,6 +94,21 @@ export function getRollupValue(
   return categoryNode[owner][metric];
 }
 
+function getStreamRollupValue(budget: any, metric: string, stream: "Delivery" | "Run", month: string | null = null) {
+  // Delivery: all Delivery categories, both Capital and Expense
+  // Run: all Run categories, Expense only
+  if (stream === "Delivery") {
+    return COST_TYPES.reduce((sum, costType) => {
+      return sum + CATEGORY_CONFIG.filter(c => c.stream === "Delivery")
+        .reduce((catSum, cat) => catSum + getRollupValue(budget, metric, month, costType, cat.key), 0);
+    }, 0);
+  } else {
+    // Run: Expense only
+    return CATEGORY_CONFIG.filter(c => c.stream === "Run")
+      .reduce((catSum, cat) => catSum + getRollupValue(budget, metric, month, "Expense", cat.key), 0);
+  }
+}
+
 export function createAnnualRollupRows(budget: any) {
   const rows = [
     {
@@ -88,6 +119,25 @@ export function createAnnualRollupRows(budget: any) {
       Allocation: "All",
       Forecast: getRollupValue(budget, "forecast"),
       Actual: getRollupValue(budget, "actual"),
+    },
+    // Budget Stream Totals
+    {
+      Level: "Budget Stream Total",
+      Period: "Annual",
+      "Cost Type": "All",
+      Category: "Delivery",
+      Allocation: "All",
+      Forecast: getStreamRollupValue(budget, "forecast", "Delivery"),
+      Actual: getStreamRollupValue(budget, "actual", "Delivery"),
+    },
+    {
+      Level: "Budget Stream Total",
+      Period: "Annual",
+      "Cost Type": "All",
+      Category: "Run",
+      Allocation: "All",
+      Forecast: getStreamRollupValue(budget, "forecast", "Run"),
+      Actual: getStreamRollupValue(budget, "actual", "Run"),
     },
   ];
   COST_TYPES.forEach((costType) => {
@@ -137,7 +187,9 @@ export function createAnnualRollupRows(budget: any) {
   });
   return rows.map((row) => ({
     ...row,
-    Variance: row.Actual - row.Forecast,
+    Forecast: safeNumber(row.Forecast),
+    Actual: safeNumber(row.Actual),
+    Variance: safeNumber(row.Actual) - safeNumber(row.Forecast),
   }));
 }
 
@@ -152,6 +204,25 @@ export function createMonthlyRollupRows(budget: any) {
         Allocation: "All",
         Forecast: getRollupValue(budget, "forecast", month),
         Actual: getRollupValue(budget, "actual", month),
+      },
+      // Budget Stream Totals
+      {
+        Level: "Budget Stream Total",
+        Period: month,
+        "Cost Type": "All",
+        Category: "Delivery",
+        Allocation: "All",
+        Forecast: getStreamRollupValue(budget, "forecast", "Delivery", month),
+        Actual: getStreamRollupValue(budget, "actual", "Delivery", month),
+      },
+      {
+        Level: "Budget Stream Total",
+        Period: month,
+        "Cost Type": "All",
+        Category: "Run",
+        Allocation: "All",
+        Forecast: getStreamRollupValue(budget, "forecast", "Run", month),
+        Actual: getStreamRollupValue(budget, "actual", "Run", month),
       },
     ];
     COST_TYPES.forEach((costType) => {
@@ -201,7 +272,9 @@ export function createMonthlyRollupRows(budget: any) {
     });
     return rows.map((row) => ({
       ...row,
-      Variance: row.Actual - row.Forecast,
+      Forecast: safeNumber(row.Forecast),
+      Actual: safeNumber(row.Actual),
+      Variance: safeNumber(row.Actual) - safeNumber(row.Forecast),
     }));
   });
 }

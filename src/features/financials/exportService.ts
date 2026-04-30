@@ -43,3 +43,5 @@ export function exportExcel(projectName: string, annualRollupRows: any[], monthl
   XLSX.utils.book_append_sheet(workbook, monthlyWorksheet, "Monthly Rollup");
   XLSX.writeFile(workbook, `${fileBaseName}-rollups.xlsx`);
 }
+
+// Note: Budget Stream rollup rows are included automatically as part of the rollup arrays.

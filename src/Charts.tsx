@@ -24,6 +24,7 @@ const CATEGORIES = [
   { key: "labor", label: "Labor", allocations: ALLOCATIONS },
   { key: "te", label: "T&E", allocations: ALLOCATIONS },
   { key: "software", label: "Software", allocations: ["Direct"] },
+  { key: "hardware", label: "Hardware", allocations: ["Direct"] }, // Hardware is Direct only
 ];
 
 function sumNode(node, metric) {
@@ -82,6 +83,7 @@ function buildCategoryRows(budget) {
     { key: "labor", label: "Labor" },
     { key: "te", label: "T&E" },
     { key: "software", label: "Software" },
+    { key: "hardware", label: "Hardware" }, // Hardware
   ];
 
   return COST_TYPES.flatMap((costType) =>
