@@ -90,4 +90,35 @@ describe("financialCalculations", () => {
     const result = sumNode(node, "forecast");
     expect(result).toBe(300);
   });
+
+  it("createInitialBudget includes Hardware for all months and cost types", () => {
+    const budget = createInitialBudget();
+    MONTHS.forEach(month => {
+      COST_TYPES.forEach(costType => {
+        expect(budget[month][costType]["hardware"]).toBeDefined();
+      });
+    });
+  });
+
+  it("annual rollup includes Hardware category", () => {
+    const budget = getBudget();
+    const annual = createAnnualRollupRows(budget);
+    const hardwareRows = annual.filter(row => row.Category === "Hardware");
+    expect(hardwareRows.length).toBeGreaterThan(0);
+    hardwareRows.forEach(row => {
+      expect(row.Forecast).toBeDefined();
+      expect(row.Actual).toBeDefined();
+    });
+  });
+
+  it("monthly rollup includes Hardware category", () => {
+    const budget = getBudget();
+    const monthly = createMonthlyRollupRows(budget);
+    const hardwareRows = monthly.filter(row => row.Category === "Hardware");
+    expect(hardwareRows.length).toBeGreaterThan(0);
+    hardwareRows.forEach(row => {
+      expect(row.Forecast).toBeDefined();
+      expect(row.Actual).toBeDefined();
+    });
+  });
 });

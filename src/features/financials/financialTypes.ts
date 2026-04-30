@@ -18,7 +18,7 @@ export type CostType = "Capital" | "Expense";
 
 export type AllocationOwner = "Business" | "Eaton IT" | "External IT";
 
-export type CostCategoryKey = string; // e.g., 'labor', 'te', 'software', etc.
+export type CostCategoryKey = string; // e.g., 'labor', 'te', 'software', 'hardware', etc.
 
 export type MetricType = "forecast" | "actual";
 
