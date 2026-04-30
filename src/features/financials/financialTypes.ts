@@ -18,7 +18,28 @@ export type CostType = "Capital" | "Expense";
 
 export type AllocationOwner = "Business" | "Eaton IT" | "External IT";
 
-export type CostCategoryKey = string; // e.g., 'labor', 'te', 'software', 'hardware', etc.
+// Delivery stream categories
+export const DELIVERY_CATEGORIES = [
+  "labor",
+  "te",
+  "software",
+  "hardware",
+] as const;
+
+// Run stream categories
+export const RUN_CATEGORIES = [
+  "software_license",
+  "support",
+  "hosting",
+  "maintenance",
+  "other_run_cost",
+] as const;
+
+export type DeliveryCategoryKey = typeof DELIVERY_CATEGORIES[number];
+export type RunCategoryKey = typeof RUN_CATEGORIES[number];
+
+// All cost categories
+export type CostCategoryKey = DeliveryCategoryKey | RunCategoryKey;
 
 export type MetricType = "forecast" | "actual";
 

@@ -51,9 +51,16 @@ describe("financialCalculations", () => {
     pair.forecast = 1000;
     pair.actual = 1200;
     const monthly = createMonthlyRollupRows(budget);
-    const jan = monthly.find(row => row["Period"] === "Jan" && row["Level"] === "Month Total");
+    // Find a Month Total row with all numeric values
+    const jan = monthly.find(row =>
+      row["Period"] === "Jan" &&
+      row["Level"] === "Month Total"
+    );
     expect(jan).toBeDefined();
     if (jan) {
+      expect(Number.isFinite(jan.Forecast)).toBe(true);
+      expect(Number.isFinite(jan.Actual)).toBe(true);
+      expect(Number.isFinite(jan.Variance)).toBe(true);
       expect(jan.Variance).toBeCloseTo(jan.Actual - jan.Forecast);
     }
   });
@@ -70,11 +77,27 @@ describe("financialCalculations", () => {
       getLaborBusinessMetricPair(budget, month, "Expense").forecast = 0;
     });
     const annual = createAnnualRollupRows(budget);
-    const grandTotal = annual.find(row => row["Category"] === "All" && row["Level"] === "Grand Total");
-    const capitalRow = annual.find(row => row["Cost Type"] === "Capital" && row["Category"] === "All" && row["Level"] === "Type Total");
-    const expenseRow = annual.find(row => row["Cost Type"] === "Expense" && row["Category"] === "All" && row["Level"] === "Type Total");
+    // Find annual Type Total rows for Capital and Expense, and Grand Total row
+    const grandTotal = annual.find(row =>
+      row["Category"] === "All" &&
+      row["Level"] === "Grand Total"
+    );
+    const capitalRow = annual.find(row =>
+      row["Cost Type"] === "Capital" &&
+      row["Category"] === "All" &&
+      row["Level"] === "Type Total"
+    );
+    const expenseRow = annual.find(row =>
+      row["Cost Type"] === "Expense" &&
+      row["Category"] === "All" &&
+      row["Level"] === "Type Total"
+    );
     expect(grandTotal && capitalRow && expenseRow).toBeTruthy();
     if (grandTotal && capitalRow && expenseRow) {
+      expect(Number.isFinite(grandTotal.Forecast)).toBe(true);
+      expect(Number.isFinite(capitalRow.Forecast)).toBe(true);
+      expect(Number.isFinite(expenseRow.Forecast)).toBe(true);
+      // Run Cost is only under Expense, so Capital + Expense = Grand Total
       expect(grandTotal.Forecast).toBeCloseTo(capitalRow.Forecast + expenseRow.Forecast);
     }
   });
@@ -122,9 +145,60 @@ describe("financialCalculations", () => {
     });
   });
 
-  it("all current categories are classified as Delivery stream", () => {
-    CATEGORY_CONFIG.forEach((cat: any) => {
-      expect(cat.stream).toBe("Delivery");
+  it("all current Delivery categories are classified as Delivery stream", () => {
+    CATEGORY_CONFIG.filter((cat: any) => cat.stream === "Delivery").forEach((cat: any) => {
+      expect(["labor", "te", "software", "hardware"]).toContain(cat.key);
+    });
+  });
+
+  it("all new Run categories are classified as Run stream", () => {
+    const runKeys = [
+      "software_license",
+      "support",
+      "hosting",
+      "maintenance",
+      "other_run_cost",
+    ];
+    CATEGORY_CONFIG.filter((cat: any) => cat.stream === "Run").forEach((cat: any) => {
+      expect(runKeys).toContain(cat.key);
+    });
+  });
+
+  it("annual rollup includes all Run categories", () => {
+    const budget = getBudget();
+    const annual = createAnnualRollupRows(budget);
+    [
+      "Software License",
+      "Support",
+      "Hosting",
+      "Maintenance",
+      "Other Run Cost",
+    ].forEach(label => {
+      const rows = annual.filter(row => row.Category === label);
+      expect(rows.length).toBeGreaterThan(0);
+      rows.forEach(row => {
+        expect(row.Forecast).toBeDefined();
+        expect(row.Actual).toBeDefined();
+      });
+    });
+  });
+
+  it("monthly rollup includes all Run categories", () => {
+    const budget = getBudget();
+    const monthly = createMonthlyRollupRows(budget);
+    [
+      "Software License",
+      "Support",
+      "Hosting",
+      "Maintenance",
+      "Other Run Cost",
+    ].forEach(label => {
+      const rows = monthly.filter(row => row.Category === label);
+      expect(rows.length).toBeGreaterThan(0);
+      rows.forEach(row => {
+        expect(row.Forecast).toBeDefined();
+        expect(row.Actual).toBeDefined();
+      });
     });
   });
 });
