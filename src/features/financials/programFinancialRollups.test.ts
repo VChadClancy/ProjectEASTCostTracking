@@ -51,12 +51,13 @@ describe('Program/Project/CAR/Workstream/BudgetStream rollups', () => {
 
   it('budget stream rollups include Delivery and Run', () => {
     const rollups = rollupFinancialLinesByBudgetStream(lines);
-    const streams = new Set(lines.map(l => l.budgetStream));
-    for (const rollup of rollups) {
-      expect(streams.has(rollup.id)).toBe(true);
+    const streamIds = rollups.map(r => r.id);
+    expect(streamIds).toContain('Run');
+    expect(streamIds).toContain('Delivery');
+    // Optionally: assert every id is either 'Run' or 'Delivery'
+    for (const id of streamIds) {
+      expect(['Run', 'Delivery']).toContain(id);
     }
-    expect(streams.has('Run')).toBe(true);
-    expect(streams.has('Delivery')).toBe(true);
   });
 
   it('all rollup variance values equal actual minus forecast', () => {
