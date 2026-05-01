@@ -78,5 +78,31 @@ To prepare for future enterprise program financial planning, the following model
 
 These types are designed to support future financial planning, reporting, and budgeting features. They include fields for IDs, names, descriptions, owners, start/end dates, status, fiscal year/period, and CAR financial amounts. This is a model preparation step only; no application behavior or UI is changed in this checkpoint.
 
+## Program Financial Summary Service (Sprint 3)
+
+A new Program Financial Summary service provides a dashboard-ready summary of program financials, combining key metrics and rollups for business reporting. This service does not create UI or backend/database integration; it is a mock-service/model-first implementation for architecture and business validation.
+
+**The summary service combines:**
+- Program details
+- Project count
+- CAR (Capital Appropriation Request) count
+- Workstream count
+- CAR approved, capital, and expense totals
+- Financial line totals (actual, forecast, variance)
+- Budget Stream rollups
+- Project rollups
+- CAR rollups
+- Workstream rollups
+
+**Rollup rows expose explicit fields for dashboard use:**
+- `budgetStream` for Budget Stream rollups
+- `projectId` for Project rollups
+- `carId` for CAR rollups
+- `workstreamId` for Workstream rollups
+
+All numeric totals are finite numbers, and variance is always calculated as actual minus forecast. The summary is designed for direct use in dashboards or reporting, but does not yet create any UI or screens.
+
+**Note:** This service is mock/model-first only—no backend or database integration exists yet. All data is in-memory and for development/validation purposes only.
+
 ---
 This note serves as a reference and guardrail for ongoing and future development. Any changes to the model should be reviewed against these principles and rules.
