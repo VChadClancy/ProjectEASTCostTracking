@@ -17,7 +17,9 @@ export interface FinancialLineFilters extends PaginationFilter, DateRangeFilter 
   projectId?: string;
   carId?: string;
   workstreamId?: string;
+  fiscalYearId?: string;
   fiscalPeriodId?: string;
+  budgetStream?: string;
 }
 
 // Example: Used for creating/updating financial lines
