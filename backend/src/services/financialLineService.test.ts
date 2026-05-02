@@ -9,8 +9,8 @@ import {
 const MOCK_ID = 'mock-test-id';
 
 describe('financialLineService', () => {
-  it('getFinancialLines returns mock lines', () => {
-    const lines = getFinancialLines();
+  it('getFinancialLines returns mock lines', async () => {
+    const lines = await getFinancialLines();
     expect(Array.isArray(lines)).toBe(true);
     expect(lines.length).toBeGreaterThan(0);
     for (const l of lines) {
@@ -22,44 +22,41 @@ describe('financialLineService', () => {
     }
   });
 
-  it('filters work for programId, projectId, carId, and budgetStream', () => {
-    const all = getFinancialLines();
+  it('filters work for programId, projectId, carId, and budgetStream', async () => {
+    const all = await getFinancialLines();
     if (!all.length) throw new Error('No mock data');
     const sample = all[0];
-    expect(getFinancialLines({ programId: sample.programId }).every(l => l.programId === sample.programId)).toBe(true);
-    expect(getFinancialLines({ projectId: sample.projectId }).every(l => l.projectId === sample.projectId)).toBe(true);
-    expect(getFinancialLines({ carId: sample.carId }).every(l => l.carId === sample.carId)).toBe(true);
-    expect(getFinancialLines({ budgetStream: sample.budgetStream }).every(l => l.budgetStream === sample.budgetStream)).toBe(true);
+    expect((await getFinancialLines({ programId: sample.programId })).every(l => l.programId === sample.programId)).toBe(true);
+    expect((await getFinancialLines({ projectId: sample.projectId })).every(l => l.projectId === sample.projectId)).toBe(true);
+    expect((await getFinancialLines({ carId: sample.carId })).every(l => l.carId === sample.carId)).toBe(true);
+    expect((await getFinancialLines({ budgetStream: sample.budgetStream })).every(l => l.budgetStream === sample.budgetStream)).toBe(true);
   });
 
-  it('getFinancialLineById returns the expected line', () => {
-    const all = getFinancialLines();
+  it('getFinancialLineById returns the expected line', async () => {
+    const all = await getFinancialLines();
     if (!all.length) throw new Error('No mock data');
     const sample = all[0];
-    const found = getFinancialLineById(sample.id);
+    const found = await getFinancialLineById(sample.id);
     expect(found).not.toBeNull();
     if (!found) throw new Error('Line not found');
     expect(found.id).toBe(sample.id);
     expect(found.varianceAmount).toBe(found.actualAmount - found.forecastAmount);
   });
 
-  it('missing line ID returns null', () => {
-    expect(getFinancialLineById('__not_found__')).toBeNull();
+  it('missing line ID returns null', async () => {
+    expect(await getFinancialLineById('__not_found__')).toBeNull();
   });
 
-  it('createFinancialLine returns a line-like object with finite numbers', () => {
+  it('createFinancialLine returns a line-like object with finite numbers', async () => {
     const input = {
       programId: 'p1',
       projectId: 'pr1',
       carId: 'c1',
       workstreamId: 'w1',
-      fiscalYearId: 'fy1',
       fiscalPeriodId: 'fp1',
-      budgetStream: 'CapEx',
-      actualAmount: 100,
-      forecastAmount: 80
+      amount: 100
     };
-    const created = createFinancialLine(input);
+    const created = await createFinancialLine(input);
     expect(created).toMatchObject(input);
     expect(typeof created.id).toBe('string');
     expect(Number.isFinite(created.actualAmount)).toBe(true);
@@ -68,11 +65,19 @@ describe('financialLineService', () => {
     expect(created.varianceAmount).toBe(created.actualAmount - created.forecastAmount);
   });
 
-  it('updateFinancialLine returns an updated line-like object or null', () => {
-    const all = getFinancialLines();
+  it('updateFinancialLine returns an updated line-like object or null', async () => {
+    const all = await getFinancialLines();
     if (!all.length) throw new Error('No mock data');
     const sample = all[0];
-    const updated = updateFinancialLine(sample.id, { actualAmount: 999 });
+    // Provide all required fields for FinancialLineInput
+    const updated = await updateFinancialLine(sample.id, {
+      programId: sample.programId,
+      projectId: sample.projectId,
+      carId: sample.carId,
+      workstreamId: sample.workstreamId,
+      fiscalPeriodId: sample.fiscalPeriodId,
+      amount: 999
+    });
     expect(updated).not.toBeNull();
     if (!updated) throw new Error('Line not found');
     expect(updated.id).toBe(sample.id);
@@ -81,7 +86,15 @@ describe('financialLineService', () => {
     expect(updated.varianceAmount).toBe(updated.actualAmount - updated.forecastAmount);
   });
 
-  it('updateFinancialLine returns null for missing line', () => {
-    expect(updateFinancialLine('__not_found__', { actualAmount: 1 })).toBeNull();
+  it('updateFinancialLine returns null for missing line', async () => {
+    // Provide all required fields for FinancialLineInput
+    expect(await updateFinancialLine('__not_found__', {
+      programId: 'p1',
+      projectId: 'pr1',
+      carId: 'c1',
+      workstreamId: 'w1',
+      fiscalPeriodId: 'fp1',
+      amount: 1
+    })).toBeNull();
   });
 });
