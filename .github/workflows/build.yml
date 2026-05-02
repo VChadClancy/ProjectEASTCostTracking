@@ -18,11 +18,25 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install dependencies
+      # Root/frontend validation
+      - name: Install dependencies (root)
         run: npm install
-      - name: Type check
+      - name: Type check (root)
         run: npm run typecheck
-      - name: Run tests
+      - name: Run tests (root)
         run: npm run test
-      - name: Build
+      - name: Build (root)
         run: npm run build
+      # Backend validation
+      - name: Install dependencies (backend)
+        run: npm install
+        working-directory: backend
+      - name: Type check (backend)
+        run: npm run typecheck
+        working-directory: backend
+      - name: Run tests (backend)
+        run: npm run test
+        working-directory: backend
+      - name: Build (backend)
+        run: npm run build
+        working-directory: backend
