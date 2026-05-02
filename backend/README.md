@@ -36,11 +36,27 @@ This layering pattern enables a smooth transition to real database repositories 
 - **Prisma** will be used as the ORM for database access and migrations.
 - **PostgreSQL** will be the production database engine.
 - **Migrations are not implemented yet.**
-- No `schema.prisma` exists yet (will be added in a future sprint).
 - All future migration files will be located in `backend/prisma/migrations/`.
 - The `DATABASE_URL` environment variable will be required when real persistence is implemented.
 
 > **Note:** This is a placeholder for the migration structure. No database code, migrations, or schema files exist yet.
+
+## Prisma Workflow (Development)
+
+Prisma is set up for schema validation and client generation. **No real database is used yet.**
+
+- **Validate the Prisma schema:**
+  ```sh
+  npm run prisma:validate
+  ```
+- **Generate the Prisma Client:**
+  ```sh
+  npm run prisma:generate
+  ```
+- **Important:**
+  - The `DATABASE_URL` environment variable **must** be set, even for validation and generation.
+  - These commands must be run from the `backend` directory.
+  - The backend still defaults to mock repositories at runtime; no database connection is made yet.
 
 ## Current Status
 - **Service-layer scaffold with mock data**
