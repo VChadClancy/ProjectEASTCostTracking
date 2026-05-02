@@ -1,0 +1,10 @@
+// Minimal Prisma schema for initialization only
+// No data models yet
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
