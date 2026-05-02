@@ -5,3 +5,6 @@ export * from './calendarCapacityRepository';
 export * from './mockProgramPlanningRepository';
 export * from './mockFinancialLineRepository';
 export * from './mockCalendarCapacityRepository';
+export * from './prismaProgramPlanningRepository';
+export * from './prismaFinancialLineRepository';
+export * from './prismaCalendarCapacityRepository';
