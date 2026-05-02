@@ -4,6 +4,7 @@ import programRoutes from './programRoutes';
 import projectRoutes from './projectRoutes';
 import carRoutes from './carRoutes';
 import workstreamRoutes from './workstreamRoutes';
+import financialLineRoutes from './financialLineRoutes';
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use('/v1/programs', programRoutes);
 router.use('/v1/projects', projectRoutes);
 router.use('/v1/cars', carRoutes);
 router.use('/v1/workstreams', workstreamRoutes);
+router.use('/v1/financial-lines', financialLineRoutes);
 
 export default router;
