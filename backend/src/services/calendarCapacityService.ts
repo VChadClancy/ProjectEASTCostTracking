@@ -1,57 +1,32 @@
-// Service for Calendar / Capacity: provides access to mock data for calendar and capacity
-import {
-  fiscalYears,
-  fiscalPeriods,
-  holidayCalendars,
-  holidays
-} from '../data/mockCalendarData';
+// Service for Calendar / Capacity: uses repository interface
+import { CalendarCapacityRepository, mockCalendarCapacityRepository } from '../repositories';
 
-// Fiscal Years
-type FiscalYear = typeof fiscalYears[number];
-export function getFiscalYears(): FiscalYear[] {
-  return Array.isArray(fiscalYears) ? fiscalYears : [];
+const repo: CalendarCapacityRepository = mockCalendarCapacityRepository;
+
+export async function getFiscalYears() {
+  return repo.getFiscalYears();
 }
 
-// Fiscal Periods (optionally filter by fiscalYearId)
-type FiscalPeriod = typeof fiscalPeriods[number];
-export function getFiscalPeriods(fiscalYearId?: string): FiscalPeriod[] {
-  if (!Array.isArray(fiscalPeriods)) return [];
-  if (!fiscalYearId) return fiscalPeriods;
-  return fiscalPeriods.filter(p => p.fiscalYearId === fiscalYearId);
+export async function getFiscalPeriods(fiscalYearId?: string) {
+  return repo.getFiscalPeriods(fiscalYearId);
 }
 
-// Holiday Calendars
-type HolidayCalendar = typeof holidayCalendars[number];
-export function getHolidayCalendars(): HolidayCalendar[] {
-  return Array.isArray(holidayCalendars) ? holidayCalendars : [];
+export async function getHolidayCalendars() {
+  return repo.getHolidayCalendars();
 }
 
-// Holidays (optionally filter by calendarId)
-type Holiday = typeof holidays[number];
-export function getHolidays(calendarId?: string): Holiday[] {
-  if (!Array.isArray(holidays)) return [];
-  if (!calendarId) return holidays;
-  return holidays.filter(h => h.calendarId === calendarId);
+export async function getHolidays(calendarId?: string) {
+  return repo.getHolidays(calendarId);
 }
 
-// Resources (not implemented in mock data)
-export function getResources(): any[] {
-  return [];
+export async function getResources() {
+  return repo.getResources();
 }
 
-// Resource Availability (not implemented in mock data)
-export function getResourceAvailability(resourceId: string): null {
-  return null;
+export async function getResourceAvailability(resourceId: string) {
+  return repo.getResourceAvailability(resourceId);
 }
 
-// Forecast Calendar Context (mock-safe)
-export function getForecastCalendarContext(programId: string) {
-  return {
-    programId,
-    fiscalYears: getFiscalYears(),
-    fiscalPeriods: getFiscalPeriods(),
-    holidayCalendars: getHolidayCalendars(),
-    resources: getResources(),
-    message: 'This is mock-backed. Forecasting logic is not implemented yet.'
-  };
+export async function getForecastCalendarContext(programId: string) {
+  return repo.getForecastCalendarContext(programId);
 }

@@ -1,36 +1,32 @@
-// Service for Program Planning: provides access to mock data for programs, projects, CARs, and workstreams
-import { programs, projects, cars, workstreams } from '../data/mockProgramData';
+// Service for Program Planning: uses repository interface
+import { ProgramPlanningRepository, mockProgramPlanningRepository } from '../repositories';
 
-export function getPrograms() {
-  return programs;
+const repo: ProgramPlanningRepository = mockProgramPlanningRepository;
+
+export async function getPrograms() {
+  return repo.getPrograms();
 }
 
-export function getProgramById(programId: string) {
-  return programs.find(p => p.id === programId) || null;
+export async function getProgramById(programId: string) {
+  return repo.getProgramById(programId);
 }
 
-export function getProjects(programId?: string) {
-  if (programId) {
-    return projects.filter(p => p.programId === programId);
-  }
-  return projects;
+export async function getProjects(programId?: string) {
+  return repo.getProjects(programId);
 }
 
-export function getProjectById(projectId: string) {
-  return projects.find(p => p.id === projectId) || null;
+export async function getProjectById(projectId: string) {
+  return repo.getProjectById(projectId);
 }
 
-export function getCars(projectId?: string) {
-  if (projectId) {
-    return cars.filter(c => c.projectId === projectId);
-  }
-  return cars;
+export async function getCars(projectId?: string) {
+  return repo.getCars(projectId);
 }
 
-export function getCarById(carId: string) {
-  return cars.find(c => c.id === carId) || null;
+export async function getCarById(carId: string) {
+  return repo.getCarById(carId);
 }
 
-export function getWorkstreams() {
-  return workstreams;
+export async function getWorkstreams() {
+  return repo.getWorkstreams();
 }
