@@ -8,3 +8,281 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model Program {
+  id           String    @id @default(uuid())
+  name         String
+  description  String?
+  projects     Project[]
+  financialLines FinancialLine[] @relation("ProgramFinancialLines")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  createdBy    String?
+  updatedBy    String?
+  sourceSystem String?
+  status       String?
+}
+
+model Project {
+  id           String    @id @default(uuid())
+  name         String
+  description  String?
+  programId    String
+  program      Program   @relation(fields: [programId], references: [id])
+  financialLines FinancialLine[] @relation("ProjectFinancialLines")
+  resourceAssignments ResourceAssignment[]
+  cars         Car[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  createdBy    String?
+  updatedBy    String?
+  sourceSystem String?
+  status       String?
+}
+
+model Car {
+  id           String    @id @default(uuid())
+  name         String
+  description  String?
+  projectId    String
+  project      Project   @relation(fields: [projectId], references: [id])
+  financialLines FinancialLine[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  createdBy    String?
+  updatedBy    String?
+  sourceSystem String?
+  status       String?
+}
+
+model Workstream {
+  id           String    @id @default(uuid())
+  name         String
+  description  String?
+  financialLines FinancialLine[]
+  resourceAssignments ResourceAssignment[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  createdBy    String?
+  updatedBy    String?
+  sourceSystem String?
+  status       String?
+}
+
+model FiscalYear {
+  id           String    @id @default(uuid())
+  year         Int
+  periods      FiscalPeriod[]
+  financialLines FinancialLine[] @relation("FiscalYearFinancialLines")
+  fiscalCalendarId String?
+  fiscalCalendar   FiscalCalendar? @relation(fields: [fiscalCalendarId], references: [id])
+  forecastAssumptions ForecastAssumption[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  createdBy    String?
+  updatedBy    String?
+  sourceSystem String?
+  status       String?
+}
+
+model FiscalPeriod {
+  id           String    @id @default(uuid())
+  name         String
+  startDate    DateTime
+  endDate      DateTime
+  fiscalYearId String
+  fiscalYear   FiscalYear @relation(fields: [fiscalYearId], references: [id])
+  resourceAvailability ResourceAvailability[]
+  financialLines FinancialLine[]
+  forecastAssumptions ForecastAssumption[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  createdBy    String?
+  updatedBy    String?
+  sourceSystem String?
+  status       String?
+}
+
+model FinancialLine {
+  id              String    @id @default(uuid())
+  programId       String?
+  program         Program?  @relation("ProgramFinancialLines", fields: [programId], references: [id])
+  projectId       String?
+  project         Project?  @relation("ProjectFinancialLines", fields: [projectId], references: [id])
+  carId           String?
+  car             Car?      @relation(fields: [carId], references: [id])
+  workstreamId    String?
+  workstream      Workstream? @relation(fields: [workstreamId], references: [id])
+  fiscalYearId    String?
+  fiscalYear      FiscalYear? @relation("FiscalYearFinancialLines", fields: [fiscalYearId], references: [id])
+  fiscalPeriodId  String?
+  fiscalPeriod    FiscalPeriod? @relation(fields: [fiscalPeriodId], references: [id])
+  budgetStreamId  String?
+  budgetStream    BudgetStream? @relation(fields: [budgetStreamId], references: [id])
+  costCategoryId  String?
+  costCategory    CostCategory? @relation(fields: [costCategoryId], references: [id])
+  amount          Decimal   @db.Decimal(18,2)
+  actualAmount    Decimal?  @db.Decimal(18,2)
+  forecastAmount  Decimal?  @db.Decimal(18,2)
+  varianceAmount  Decimal?  @db.Decimal(18,2)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdBy       String?
+  updatedBy       String?
+  sourceSystem    String?
+  status          String?
+}
+
+model BudgetStream {
+  id           String    @id @default(uuid())
+  name         String
+  financialLines FinancialLine[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  createdBy    String?
+  updatedBy    String?
+  sourceSystem String?
+  status       String?
+}
+
+model CostCategory {
+  id           String    @id @default(uuid())
+  name         String
+  financialLines FinancialLine[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  createdBy    String?
+  updatedBy    String?
+  sourceSystem String?
+  status       String?
+}
+
+model AuditEvent {
+  id           String    @id @default(uuid())
+  eventType    String
+  entityId     String
+  entityType   String
+  eventData    Json?
+  createdAt    DateTime  @default(now())
+  createdBy    String?
+  sourceSystem String?
+}
+
+model FiscalCalendar {
+  id           String    @id @default(uuid())
+  name         String
+  fiscalYears  FiscalYear[]
+  holidayCalendars HolidayCalendar[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  createdBy    String?
+  updatedBy    String?
+  sourceSystem String?
+  status       String?
+}
+
+model HolidayCalendar {
+  id           String    @id @default(uuid())
+  name         String
+  holidays     Holiday[]
+  fiscalCalendarId String?
+  fiscalCalendar   FiscalCalendar? @relation(fields: [fiscalCalendarId], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  createdBy    String?
+  updatedBy    String?
+  sourceSystem String?
+  status       String?
+}
+
+model Holiday {
+  id           String    @id @default(uuid())
+  name         String
+  date         DateTime
+  holidayCalendarId String
+  holidayCalendar   HolidayCalendar @relation(fields: [holidayCalendarId], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  createdBy    String?
+  updatedBy    String?
+  sourceSystem String?
+  status       String?
+}
+
+model Resource {
+  id           String    @id @default(uuid())
+  name         String
+  resourceAssignments ResourceAssignment[]
+  plannedAbsences PlannedAbsence[]
+  resourceAvailabilities ResourceAvailability[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  createdBy    String?
+  updatedBy    String?
+  sourceSystem String?
+  status       String?
+}
+
+model ResourceAssignment {
+  id           String    @id @default(uuid())
+  resourceId   String
+  resource     Resource  @relation(fields: [resourceId], references: [id])
+  projectId    String?
+  project      Project?  @relation(fields: [projectId], references: [id])
+  workstreamId String?
+  workstream   Workstream? @relation(fields: [workstreamId], references: [id])
+  startDate    DateTime
+  endDate      DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  createdBy    String?
+  updatedBy    String?
+  sourceSystem String?
+  status       String?
+}
+
+model PlannedAbsence {
+  id           String    @id @default(uuid())
+  resourceId   String
+  resource     Resource  @relation(fields: [resourceId], references: [id])
+  startDate    DateTime
+  endDate      DateTime
+  reason       String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  createdBy    String?
+  updatedBy    String?
+  sourceSystem String?
+  status       String?
+}
+
+model ResourceAvailability {
+  id           String    @id @default(uuid())
+  resourceId   String
+  resource     Resource  @relation(fields: [resourceId], references: [id])
+  fiscalPeriodId String?
+  fiscalPeriod   FiscalPeriod? @relation(fields: [fiscalPeriodId], references: [id])
+  availableHours Decimal? @db.Decimal(8,2)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  createdBy    String?
+  updatedBy    String?
+  sourceSystem String?
+  status       String?
+}
+
+model ForecastAssumption {
+  id           String    @id @default(uuid())
+  name         String
+  description  String?
+  fiscalYearId String?
+  fiscalYear   FiscalYear? @relation(fields: [fiscalYearId], references: [id])
+  fiscalPeriodId String?
+  fiscalPeriod   FiscalPeriod? @relation(fields: [fiscalPeriodId], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  createdBy    String?
+  updatedBy    String?
+  sourceSystem String?
+  status       String?
+}
