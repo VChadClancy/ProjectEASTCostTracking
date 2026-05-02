@@ -3,6 +3,8 @@
 ## Purpose
 This backend provides a RESTful API scaffold for Project EAST cost tracking and forecasting. It is designed to align with the API contract in [`docs/architecture/api-contract-v1.md`](../docs/architecture/api-contract-v1.md). The current implementation is a stub service for development and integration scaffolding.
 
+[➡️ Local Database Setup Guide](docs/local-database-setup.md)
+
 ## Backend Layering Pattern
 
 The backend is organized into a clear service-layer architecture to support future scalability and maintainability. The main layers are:
