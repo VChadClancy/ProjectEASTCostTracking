@@ -9,17 +9,65 @@ This document describes how to set up a local PostgreSQL database for EPFOS back
 - No migrations have been applied to a real database yet.
 - All runtime persistence is still mocked; no live database queries.
 
+## Local PostgreSQL with Docker (Recommended)
+
+A pre-configured Docker Compose file is provided for local development. This will run PostgreSQL 16 in a container with persistent storage.
+
+### Start the Database
+
+From the `backend` directory:
+
+```
+docker compose up -d
+```
+
+### Stop the Database
+
+```
+docker compose down
+```
+
+### Verify Database is Running
+
+```
+docker compose ps
+```
+
+You should see a container named `epfos-postgres` with status `healthy`.
+
+You can also check health directly:
+
+```
+docker exec epfos-postgres pg_isready -U epfos_user -d epfos_dev
+```
+
+### Local Development Database URL
+
+```
+DATABASE_URL=postgresql://epfos_user:epfos_password@localhost:5432/epfos_dev
+```
+
+This is already set in `.env.example`.
+
+### Notes
+- This database is for **local development only**. Do not use for production or staging.
+- The backend runtime still defaults to mock repositories. No live database queries are performed yet.
+- No migrations are applied by default. You may use Prisma CLI for schema validation and client generation.
+- See [../prisma/README.md](../prisma/README.md) for Prisma usage.
+
+## Manual Local PostgreSQL Option
+
+You may also install PostgreSQL locally (e.g., via [Postgres.app](https://postgresapp.com/) or [Homebrew](https://brew.sh/)) and create a database/user matching the above credentials.
+
 ## Safe Commands
 
 ```
-DATABASE_URL="postgresql://user:password@localhost:5432/epfos_dev" npm run prisma:validate
-DATABASE_URL="postgresql://user:password@localhost:5432/epfos_dev" npm run prisma:generate
+DATABASE_URL="postgresql://epfos_user:epfos_password@localhost:5432/epfos_dev" npm run prisma:validate
+DATABASE_URL="postgresql://epfos_user:epfos_password@localhost:5432/epfos_dev" npm run prisma:generate
 npm run typecheck
 npm run test
 npm run build
 ```
-
-See [../prisma/README.md](../prisma/README.md) for current implementation status.
 
 ## Current Status
 - **No production database is configured yet.**
@@ -32,17 +80,6 @@ See [../prisma/README.md](../prisma/README.md) for current implementation status
 - [npm](https://www.npmjs.com/)
 - [Prisma CLI](https://www.prisma.io/docs/reference/api-reference/command-reference)
 - [PostgreSQL](https://www.postgresql.org/) (local install **or** Docker)
-
-## Local PostgreSQL Option
-1. Install PostgreSQL locally (e.g., via [Postgres.app](https://postgresapp.com/) or [Homebrew](https://brew.sh/)).
-2. Create a database for EPFOS (e.g., `epfos_local`).
-
-## Docker PostgreSQL Option
-1. Run a PostgreSQL container:
-   ```sh
-   docker run --name epfos-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=epfos_local -p 5432:5432 -d postgres:15
-   ```
-2. Connect using the same credentials as the local option.
 
 ## Example `DATABASE_URL`
 ```

@@ -1,0 +1,22 @@
+version: '3.9'
+services:
+  postgres:
+    image: postgres:16
+    container_name: epfos-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: epfos_dev
+      POSTGRES_USER: epfos_user
+      POSTGRES_PASSWORD: epfos_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - epfos-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U epfos_user -d epfos_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+volumes:
+  epfos-postgres-data:
+    name: epfos-postgres-data
