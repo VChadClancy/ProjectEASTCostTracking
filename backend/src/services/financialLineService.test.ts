@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { beforeAll, describe, it, expect } from 'vitest';
 import {
   getFinancialLines,
   getFinancialLineById,
@@ -7,6 +7,11 @@ import {
 } from './financialLineService';
 
 const MOCK_ID = 'mock-test-id';
+
+// Force mock mode for all tests in this file, regardless of environment
+beforeAll(() => {
+  process.env.REPOSITORY_MODE = 'mock';
+});
 
 describe('financialLineService', () => {
   it('getFinancialLines returns mock lines', async () => {

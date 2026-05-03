@@ -31,4 +31,7 @@ export interface FinancialLineInput {
   fiscalPeriodId: string;
   amount: number;
   description?: string;
+  actualAmount?: number;
+  forecastAmount?: number;
+  varianceAmount?: number;
 }
