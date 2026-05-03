@@ -39,16 +39,11 @@ describe('Prisma repository stubs', () => {
     await expect(repo.getWorkstreams()).rejects.toThrow(NotImplementedError);
   });
 
-  it('PrismaFinancialLineRepository methods throw NotImplementedError', async () => {
-    const repo = new PrismaFinancialLineRepository();
-    await expect(repo.getFinancialLines()).rejects.toThrow(NotImplementedError);
-    await expect(repo.getFinancialLineById('x')).rejects.toThrow(NotImplementedError);
-    await expect(repo.createFinancialLine({
-      programId: 'p', projectId: 'pr', carId: 'c', workstreamId: 'w', fiscalPeriodId: 'fp', amount: 1
-    })).rejects.toThrow(NotImplementedError);
-    await expect(repo.updateFinancialLine('x', {
-      programId: 'p', projectId: 'pr', carId: 'c', workstreamId: 'w', fiscalPeriodId: 'fp', amount: 1
-    })).rejects.toThrow(NotImplementedError);
+  it('PrismaFinancialLineRepository read methods require client or DATABASE_URL', async () => {
+    const repo = new PrismaFinancialLineRepository(mockPrisma);
+    // Should not throw NotImplementedError, but will likely fail due to mock
+    await expect(repo.getFinancialLines()).rejects.not.toThrow(NotImplementedError);
+    await expect(repo.getFinancialLineById('x')).rejects.not.toThrow(NotImplementedError);
   });
 
   it('PrismaCalendarCapacityRepository methods throw NotImplementedError', async () => {

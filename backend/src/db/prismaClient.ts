@@ -5,6 +5,7 @@
 // The PrismaClient instance is only created when getPrismaClient() is called.
 
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 let prismaClient: PrismaClient | undefined;
 
@@ -14,11 +15,13 @@ let prismaClient: PrismaClient | undefined;
  * Do not use in production code until repository mode is switched.
  */
 export function getPrismaClient(): PrismaClient {
-  if (!process.env.DATABASE_URL) {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
     throw new Error('DATABASE_URL is required to initialize PrismaClient.');
   }
   if (!prismaClient) {
-    prismaClient = new PrismaClient();
+    const adapter = new PrismaPg({ connectionString });
+    prismaClient = new PrismaClient({ adapter });
   }
   return prismaClient;
 }
