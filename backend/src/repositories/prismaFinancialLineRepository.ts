@@ -65,10 +65,72 @@ export class PrismaFinancialLineRepository implements FinancialLineRepository {
     return line ? mapFinancialLine(line) : null;
   }
 
-  async createFinancialLine(input: FinancialLineInput): Promise<any> {
-    throw new NotImplementedError();
+  async createFinancialLine(input: any): Promise<any> {
+    const prisma = this.getClient();
+    // Required fields: programId, projectId, carId, workstreamId, fiscalPeriodId, amount, actualAmount, forecastAmount, budgetStreamId, fiscalYearId
+    // Accept input as FinancialLineInput, but allow extra fields for test flexibility
+    const {
+      programId,
+      projectId,
+      carId,
+      workstreamId,
+      fiscalYearId,
+      fiscalPeriodId,
+      budgetStreamId,
+      amount,
+      actualAmount,
+      forecastAmount,
+      ...rest
+    } = input;
+    if (!programId || !projectId || !carId || !workstreamId || !fiscalYearId || !fiscalPeriodId || !budgetStreamId) {
+      throw new Error('Missing required field(s) for FinancialLine');
+    }
+    // Prisma Decimal conversion
+    const Decimal = (await import('decimal.js')).default;
+    const amountDec = new Decimal(amount);
+    const actualAmountDec = actualAmount != null ? new Decimal(actualAmount) : new Decimal(0);
+    const forecastAmountDec = forecastAmount != null ? new Decimal(forecastAmount) : new Decimal(0);
+    const varianceAmountDec = actualAmountDec.minus(forecastAmountDec);
+    const created = await prisma.financialLine.create({
+      data: {
+        programId,
+        projectId,
+        carId,
+        workstreamId,
+        fiscalYearId,
+        fiscalPeriodId,
+        budgetStreamId,
+        amount: amountDec,
+        actualAmount: actualAmountDec,
+        forecastAmount: forecastAmountDec,
+        varianceAmount: varianceAmountDec,
+        ...rest,
+      },
+    });
+    return mapFinancialLine(created);
   }
-  async updateFinancialLine(lineId: string, input: FinancialLineInput): Promise<any> {
-    throw new NotImplementedError();
+
+  async updateFinancialLine(lineId: string, input: any): Promise<any | null> {
+    const prisma = this.getClient();
+    // Find existing
+    const existing = await prisma.financialLine.findUnique({ where: { id: lineId } });
+    if (!existing) return null;
+    // Prepare update
+    const Decimal = (await import('decimal.js')).default;
+    let updateData: any = { ...input };
+    // If actualAmount or forecastAmount is being updated, recalc varianceAmount
+    let actual = input.actualAmount != null ? new Decimal(input.actualAmount) : new Decimal(existing.actualAmount ?? 0);
+    let forecast = input.forecastAmount != null ? new Decimal(input.forecastAmount) : new Decimal(existing.forecastAmount ?? 0);
+    if ('actualAmount' in input || 'forecastAmount' in input) {
+      updateData.varianceAmount = actual.minus(forecast);
+    }
+    if ('amount' in input) updateData.amount = new Decimal(input.amount);
+    if ('actualAmount' in input) updateData.actualAmount = actual;
+    if ('forecastAmount' in input) updateData.forecastAmount = forecast;
+    const updated = await prisma.financialLine.update({
+      where: { id: lineId },
+      data: updateData,
+    });
+    return mapFinancialLine(updated);
   }
 }

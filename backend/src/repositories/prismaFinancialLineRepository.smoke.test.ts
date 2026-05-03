@@ -71,4 +71,44 @@ const shouldRun = process.env.RUN_DB_SMOKE_TESTS === 'true';
     const lines = await repo.getFinancialLines({ programId: testIds.programId });
     expect(lines.some(l => l.id === testIds.financialLineId)).toBe(true);
   });
+
+  it('can create, read, and update a FinancialLine via Prisma repository', async () => {
+    // Create via repository
+    const input = {
+      programId: testIds.programId,
+      projectId: testIds.projectId,
+      carId: testIds.carId,
+      workstreamId: testIds.workstreamId,
+      fiscalYearId: testIds.fiscalYearId,
+      fiscalPeriodId: testIds.fiscalPeriodId,
+      budgetStreamId: testIds.budgetStreamId,
+      amount: 2000,
+      actualAmount: 2100,
+      forecastAmount: 2000,
+    };
+    const created = await repo.createFinancialLine(input);
+    expect(created).toBeDefined();
+    expect(created.amount).toBe(2000);
+    expect(created.actualAmount).toBe(2100);
+    expect(created.forecastAmount).toBe(2000);
+    expect(created.varianceAmount).toBe(100);
+    // Read by ID
+    const found = await repo.getFinancialLineById(created.id);
+    expect(found).toBeDefined();
+    expect(found.id).toBe(created.id);
+    // Update actualAmount, check variance
+    const updated = await repo.updateFinancialLine(created.id, { actualAmount: 2500 });
+    expect(updated).toBeDefined();
+    expect(updated.actualAmount).toBe(2500);
+    expect(updated.forecastAmount).toBe(2000);
+    expect(updated.varianceAmount).toBe(500);
+    // Update forecastAmount, check variance
+    const updated2 = await repo.updateFinancialLine(created.id, { forecastAmount: 2300 });
+    expect(updated2).toBeDefined();
+    expect(updated2.actualAmount).toBe(2500);
+    expect(updated2.forecastAmount).toBe(2300);
+    expect(updated2.varianceAmount).toBe(200);
+    // Clean up
+    await prisma.financialLine.delete({ where: { id: created.id } });
+  });
 });

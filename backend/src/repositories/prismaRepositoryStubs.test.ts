@@ -46,16 +46,6 @@ describe('Prisma repository stubs', () => {
     await expect(repo.getFinancialLineById('x')).rejects.not.toThrow(NotImplementedError);
   });
 
-  it('PrismaFinancialLineRepository create/update throw NotImplementedError', async () => {
-    const repo = new PrismaFinancialLineRepository();
-    await expect(repo.createFinancialLine({
-      programId: 'p', projectId: 'pr', carId: 'c', workstreamId: 'w', fiscalPeriodId: 'fp', amount: 1
-    })).rejects.toThrow(NotImplementedError);
-    await expect(repo.updateFinancialLine('x', {
-      programId: 'p', projectId: 'pr', carId: 'c', workstreamId: 'w', fiscalPeriodId: 'fp', amount: 1
-    })).rejects.toThrow(NotImplementedError);
-  });
-
   it('PrismaCalendarCapacityRepository methods throw NotImplementedError', async () => {
     const repo = new PrismaCalendarCapacityRepository();
     await expect(repo.getFiscalYears()).rejects.toThrow(NotImplementedError);
