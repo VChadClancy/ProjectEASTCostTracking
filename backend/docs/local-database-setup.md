@@ -3,6 +3,24 @@
 ## Purpose
 This document describes how to set up a local PostgreSQL database for EPFOS backend development using Prisma. It is intended for developers preparing for future database integration and testing.
 
+## Current Status (Sprint 8 Checkpoint 70)
+- **Prisma** is installed and configured for PostgreSQL.
+- `schema.prisma` contains initial EPFOS models and validates.
+- No migrations have been applied to a real database yet.
+- All runtime persistence is still mocked; no live database queries.
+
+## Safe Commands
+
+```
+DATABASE_URL="postgresql://user:password@localhost:5432/epfos_dev" npm run prisma:validate
+DATABASE_URL="postgresql://user:password@localhost:5432/epfos_dev" npm run prisma:generate
+npm run typecheck
+npm run test
+npm run build
+```
+
+See [../prisma/README.md](../prisma/README.md) for current implementation status.
+
 ## Current Status
 - **No production database is configured yet.**
 - **Runtime remains in mock repository mode by default.**

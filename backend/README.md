@@ -1,5 +1,35 @@
 # Project EAST Backend Service
 
+## Database Implementation Status (Sprint 8 Checkpoint 70)
+
+- **Prisma** is installed and configured (Prisma 7).
+- **PostgreSQL** is the target database.
+- `schema.prisma` contains initial EPFOS models.
+- Prisma Client can be generated.
+- Prisma Client wrapper exists.
+- Repository skeletons for Prisma exist, but are not implemented.
+- Runtime still uses mock repositories by default (no live DB queries).
+
+### Not Implemented Yet
+
+- No active database connection in runtime.
+- No Prisma repository queries implemented.
+- No migrations applied to a real database.
+- No production database.
+- No frontend/backend persistence integration.
+
+### Safe Commands
+
+```
+DATABASE_URL="postgresql://user:password@localhost:5432/epfos_dev" npm run prisma:validate
+DATABASE_URL="postgresql://user:password@localhost:5432/epfos_dev" npm run prisma:generate
+npm run typecheck
+npm run test
+npm run build
+```
+
+See [prisma/README.md](prisma/README.md) for more details.
+
 ## Purpose
 This backend provides a RESTful API scaffold for Project EAST cost tracking and forecasting. It is designed to align with the API contract in [`docs/architecture/api-contract-v1.md`](../docs/architecture/api-contract-v1.md). The current implementation is a stub service for development and integration scaffolding.
 
