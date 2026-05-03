@@ -1,6 +1,6 @@
 # Prisma & Database Implementation Status
 
-## Current Status (Sprint 9 Checkpoint 74)
+## Current Status (Sprint 9 Checkpoint 82)
 
 - **Prisma** is installed and configured (Prisma 7).
 - **PostgreSQL** is the target database.
@@ -8,42 +8,65 @@
 - Prisma validate/generate scripts are available.
 - **Prisma Client** can be generated from the schema.
 - A **Prisma Client wrapper** exists for usage in the codebase.
-- **Repository skeletons** for Prisma exist and are aligned with contracts, but are not implemented.
-- **Runtime** still defaults to mock repositories (no live database queries).
-- **First migration workflow is now available for local development.**
+- **FinancialLine** repository and service are wired for Prisma and can be tested locally.
+- **Repository skeletons** for ProgramPlanning and CalendarCapacity exist but are not active in Prisma mode.
+- **Runtime** defaults to mock repositories (`REPOSITORY_MODE=mock`).
+- **Prisma runtime path is guarded/local only.**
 
-## Migration Workflow (Local Development Only)
+---
+
+## Migration & Prisma Workflow (Local Development Only)
 
 - Start local PostgreSQL using Docker Compose (see [../docs/local-database-setup.md](../docs/local-database-setup.md)).
-- Run the first migration with:
+- Validate schema:
   ```
-  DATABASE_URL=postgresql://epfos_user:epfos_password@localhost:5432/epfos_dev npm run prisma:migrate:dev
+  DATABASE_URL="postgresql://epfos_user:epfos_password@localhost:5432/epfos_dev" npm run prisma:validate
   ```
-- Check migration status with:
+- Generate Prisma client:
   ```
-  DATABASE_URL=postgresql://epfos_user:epfos_password@localhost:5432/epfos_dev npm run prisma:migrate:status
+  DATABASE_URL="postgresql://epfos_user:epfos_password@localhost:5432/epfos_dev" npm run prisma:generate
+  ```
+- Check migration status:
+  ```
+  DATABASE_URL="postgresql://epfos_user:epfos_password@localhost:5432/epfos_dev" npm run prisma:migrate:status
   ```
 - This workflow is for **local development only**. No migrations are applied in production or staging.
-- The backend runtime still defaults to mock repositories (`REPOSITORY_MODE=mock`).
+
+---
+
+## Guarded DB Smoke Tests
+
+- **DB Connection Smoke Test:**
+  ```
+  RUN_DB_SMOKE_TESTS=true DATABASE_URL="postgresql://epfos_user:epfos_password@localhost:5432/epfos_dev" npm run test -- src/db/prismaConnection.smoke.test.ts
+  ```
+- **FinancialLine Repository Smoke Test:**
+  ```
+  RUN_DB_SMOKE_TESTS=true DATABASE_URL="postgresql://epfos_user:epfos_password@localhost:5432/epfos_dev" npm run test -- src/repositories/prismaFinancialLineRepository.smoke.test.ts
+  ```
+- **FinancialLine Service Smoke Test:**
+  ```
+  RUN_DB_SMOKE_TESTS=true REPOSITORY_MODE=prisma DATABASE_URL="postgresql://epfos_user:epfos_password@localhost:5432/epfos_dev" npm run test -- src/services/financialLineService.smoke.test.ts
+  ```
+
+---
+
+## Current Runtime Behavior
+
+- **Default runtime:** `REPOSITORY_MODE=mock` (all persistence is mocked)
+- **Prisma runtime:** `REPOSITORY_MODE=prisma` (FinancialLine only, guarded/local only)
+- **FinancialLine:** Only service currently wired for Prisma mode
+- **ProgramPlanning & CalendarCapacity:** Remain mock/stubbed in Prisma mode
+
+---
 
 ## Not Implemented Yet
 
-- No active database connection in runtime (no real DB queries at runtime).
-- No Prisma repository queries implemented.
-- No production database is configured or used.
-- No frontend/backend persistence integration (all persistence is mocked).
-- No migration SQL files are included in the repo yet.
-- No seed scripts are provided yet.
-
-## Safe Commands (for local development)
-
-```
-DATABASE_URL="postgresql://user:password@localhost:5432/epfos_dev" npm run prisma:validate
-DATABASE_URL="postgresql://user:password@localhost:5432/epfos_dev" npm run prisma:generate
-npm run typecheck
-npm run test
-npm run build
-```
+- No production database
+- No deployed persistence environment
+- No frontend/backend persistence integration
+- No broad Prisma CRUD for Program, Project, CAR, Calendar, Resource, or Capacity
+- No auth/RBAC/audit enforcement
 
 ---
 
