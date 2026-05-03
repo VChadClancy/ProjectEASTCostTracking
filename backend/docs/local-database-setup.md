@@ -78,6 +78,20 @@ DATABASE_URL=postgresql://epfos_user:epfos_password@localhost:5432/epfos_dev npm
 
 This will show which migrations have been applied to your local database.
 
+### Running a Database Connectivity Smoke Test (Optional)
+
+A minimal database connectivity test is available for local development. This test is **skipped by default** and will only run if you explicitly enable it with an environment variable.
+
+To run the smoke test:
+
+```
+RUN_DB_SMOKE_TESTS=true DATABASE_URL="postgresql://epfos_user:epfos_password@localhost:5432/epfos_dev" npm run test -- prismaConnection.smoke.test.ts
+```
+
+- The test will connect to the database and run a minimal query.
+- If `RUN_DB_SMOKE_TESTS` is not set to `true`, the test will be skipped.
+- This is for local development only and is **not required for CI or GitHub Actions**.
+
 ### Notes
 - This migration workflow is for **local development only**. Do not use for production or staging.
 - The backend runtime still defaults to mock repositories. No live database queries are performed yet. Set `REPOSITORY_MODE=mock` (default).
