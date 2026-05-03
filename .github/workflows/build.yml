@@ -31,6 +31,9 @@ jobs:
       - name: Install dependencies (backend)
         run: npm install
         working-directory: backend
+      - name: Backend Prisma generate
+        working-directory: backend
+        run: DATABASE_URL="postgresql://user:password@localhost:5432/epfos_dev" npm run prisma:generate
       - name: Type check (backend)
         run: npm run typecheck
         working-directory: backend
