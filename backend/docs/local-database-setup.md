@@ -60,7 +60,13 @@ From the `backend` directory:
 DATABASE_URL=postgresql://epfos_user:epfos_password@localhost:5432/epfos_dev npm run prisma:migrate:dev
 ```
 
-This will prompt you for a migration name and apply the migration to your local database.
+When prompted for a migration name, **enter**:
+
+```
+init_epfos_schema
+```
+
+This will create and apply the initial migration to your local database.
 
 ### Checking Migration Status
 
