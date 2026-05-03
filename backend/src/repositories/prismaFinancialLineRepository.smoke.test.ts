@@ -20,6 +20,7 @@ const shouldRun = process.env.RUN_DB_SMOKE_TESTS === 'true';
     const fiscalYear = await prisma.fiscalYear.create({ data: { year: 2099 } });
     const fiscalPeriod = await prisma.fiscalPeriod.create({ data: { name: 'Test Period', startDate: new Date(), endDate: new Date(), fiscalYearId: fiscalYear.id } });
     const budgetStream = await prisma.budgetStream.create({ data: { name: 'Test BudgetStream' } });
+    const costCategory = await prisma.costCategory.create({ data: { name: 'Test CostCategory' } });
     // Insert FinancialLine
     const financialLine = await prisma.financialLine.create({
       data: {
@@ -30,12 +31,14 @@ const shouldRun = process.env.RUN_DB_SMOKE_TESTS === 'true';
         fiscalYearId: fiscalYear.id,
         fiscalPeriodId: fiscalPeriod.id,
         budgetStreamId: budgetStream.id,
+        costCategoryId: costCategory.id,
         amount: 1000,
         actualAmount: 1100,
         forecastAmount: 1000,
+        status: 'active',
       },
     });
-    testIds = { programId: program.id, projectId: project.id, carId: car.id, workstreamId: workstream.id, fiscalYearId: fiscalYear.id, fiscalPeriodId: fiscalPeriod.id, budgetStreamId: budgetStream.id, financialLineId: financialLine.id };
+    testIds = { programId: program.id, projectId: project.id, carId: car.id, workstreamId: workstream.id, fiscalYearId: fiscalYear.id, fiscalPeriodId: fiscalPeriod.id, budgetStreamId: budgetStream.id, costCategoryId: costCategory.id, financialLineId: financialLine.id };
     repo = new PrismaFinancialLineRepository(prisma);
   });
 
@@ -49,6 +52,7 @@ const shouldRun = process.env.RUN_DB_SMOKE_TESTS === 'true';
     await prisma.car.deleteMany({ where: { id: testIds.carId } });
     await prisma.project.deleteMany({ where: { id: testIds.projectId } });
     await prisma.program.deleteMany({ where: { id: testIds.programId } });
+    await prisma.costCategory.deleteMany({ where: { id: testIds.costCategoryId } });
     await resetPrismaClientForTests();
   });
 
@@ -82,9 +86,11 @@ const shouldRun = process.env.RUN_DB_SMOKE_TESTS === 'true';
       fiscalYearId: testIds.fiscalYearId,
       fiscalPeriodId: testIds.fiscalPeriodId,
       budgetStreamId: testIds.budgetStreamId,
+      costCategoryId: testIds.costCategoryId,
       amount: 2000,
       actualAmount: 2100,
       forecastAmount: 2000,
+      status: 'active',
     };
     const created = await repo.createFinancialLine(input);
     expect(created).toBeDefined();
