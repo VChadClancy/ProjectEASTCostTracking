@@ -6,6 +6,9 @@ import {
 } from './index';
 import { NotImplementedError } from './prismaRepositoryUtils';
 
+// Mock PrismaClient for injection
+const mockPrisma = {} as any;
+
 function expectNotImplementedError(e: any) {
   expect(e).toBeInstanceOf(NotImplementedError);
   expect(e.message).toMatch(/not implemented/i);
@@ -14,12 +17,15 @@ function expectNotImplementedError(e: any) {
 describe('Prisma repository stubs', () => {
   it('PrismaProgramPlanningRepository can be constructed', () => {
     expect(() => new PrismaProgramPlanningRepository()).not.toThrow();
+    expect(() => new PrismaProgramPlanningRepository(mockPrisma)).not.toThrow();
   });
   it('PrismaFinancialLineRepository can be constructed', () => {
     expect(() => new PrismaFinancialLineRepository()).not.toThrow();
+    expect(() => new PrismaFinancialLineRepository(mockPrisma)).not.toThrow();
   });
   it('PrismaCalendarCapacityRepository can be constructed', () => {
     expect(() => new PrismaCalendarCapacityRepository()).not.toThrow();
+    expect(() => new PrismaCalendarCapacityRepository(mockPrisma)).not.toThrow();
   });
 
   it('PrismaProgramPlanningRepository methods throw NotImplementedError', async () => {
