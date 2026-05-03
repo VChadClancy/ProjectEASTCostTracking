@@ -3,11 +3,12 @@
 ## Purpose
 This document describes how to set up a local PostgreSQL database for EPFOS backend development using Prisma. It is intended for developers preparing for future database integration and testing.
 
-## Current Status (Sprint 8 Checkpoint 70)
+## Current Status (Sprint 9 Checkpoint 74)
 - **Prisma** is installed and configured for PostgreSQL.
 - `schema.prisma` contains initial EPFOS models and validates.
 - No migrations have been applied to a real database yet.
 - All runtime persistence is still mocked; no live database queries.
+- **First migration workflow is now available for local development.**
 
 ## Local PostgreSQL with Docker (Recommended)
 
@@ -49,11 +50,34 @@ DATABASE_URL=postgresql://epfos_user:epfos_password@localhost:5432/epfos_dev
 
 This is already set in `.env.example`.
 
+### Running the First Local Migration
+
+Once PostgreSQL is running, you can apply the first migration (this will create the database tables as defined in `schema.prisma`).
+
+From the `backend` directory:
+
+```
+DATABASE_URL=postgresql://epfos_user:epfos_password@localhost:5432/epfos_dev npm run prisma:migrate:dev
+```
+
+This will prompt you for a migration name and apply the migration to your local database.
+
+### Checking Migration Status
+
+To check the status of migrations:
+
+```
+DATABASE_URL=postgresql://epfos_user:epfos_password@localhost:5432/epfos_dev npm run prisma:migrate:status
+```
+
+This will show which migrations have been applied to your local database.
+
 ### Notes
-- This database is for **local development only**. Do not use for production or staging.
-- The backend runtime still defaults to mock repositories. No live database queries are performed yet.
-- No migrations are applied by default. You may use Prisma CLI for schema validation and client generation.
-- See [../prisma/README.md](../prisma/README.md) for Prisma usage.
+- This migration workflow is for **local development only**. Do not use for production or staging.
+- The backend runtime still defaults to mock repositories. No live database queries are performed yet. Set `REPOSITORY_MODE=mock` (default).
+- No migration SQL files are included in the repo yet.
+- No seed scripts are provided yet.
+- See [../prisma/README.md](../prisma/README.md) for more Prisma usage details.
 
 ## Manual Local PostgreSQL Option
 
