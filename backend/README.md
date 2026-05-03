@@ -1,7 +1,39 @@
 # Project EAST Backend Service
 
+## Database Implementation Status (Sprint 8 Checkpoint 70)
+
+- **Prisma** is installed and configured (Prisma 7).
+- **PostgreSQL** is the target database.
+- `schema.prisma` contains initial EPFOS models.
+- Prisma Client can be generated.
+- Prisma Client wrapper exists.
+- Repository skeletons for Prisma exist, but are not implemented.
+- Runtime still uses mock repositories by default (no live DB queries).
+
+### Not Implemented Yet
+
+- No active database connection in runtime.
+- No Prisma repository queries implemented.
+- No migrations applied to a real database.
+- No production database.
+- No frontend/backend persistence integration.
+
+### Safe Commands
+
+```
+DATABASE_URL="postgresql://user:password@localhost:5432/epfos_dev" npm run prisma:validate
+DATABASE_URL="postgresql://user:password@localhost:5432/epfos_dev" npm run prisma:generate
+npm run typecheck
+npm run test
+npm run build
+```
+
+See [prisma/README.md](prisma/README.md) for more details.
+
 ## Purpose
 This backend provides a RESTful API scaffold for Project EAST cost tracking and forecasting. It is designed to align with the API contract in [`docs/architecture/api-contract-v1.md`](../docs/architecture/api-contract-v1.md). The current implementation is a stub service for development and integration scaffolding.
+
+[➡️ Local Database Setup Guide](docs/local-database-setup.md)
 
 ## Backend Layering Pattern
 
@@ -36,11 +68,27 @@ This layering pattern enables a smooth transition to real database repositories 
 - **Prisma** will be used as the ORM for database access and migrations.
 - **PostgreSQL** will be the production database engine.
 - **Migrations are not implemented yet.**
-- No `schema.prisma` exists yet (will be added in a future sprint).
 - All future migration files will be located in `backend/prisma/migrations/`.
 - The `DATABASE_URL` environment variable will be required when real persistence is implemented.
 
 > **Note:** This is a placeholder for the migration structure. No database code, migrations, or schema files exist yet.
+
+## Prisma Workflow (Development)
+
+Prisma is set up for schema validation and client generation. **No real database is used yet.**
+
+- **Validate the Prisma schema:**
+  ```sh
+  npm run prisma:validate
+  ```
+- **Generate the Prisma Client:**
+  ```sh
+  npm run prisma:generate
+  ```
+- **Important:**
+  - The `DATABASE_URL` environment variable **must** be set, even for validation and generation.
+  - These commands must be run from the `backend` directory.
+  - The backend still defaults to mock repositories at runtime; no database connection is made yet.
 
 ## Current Status
 - **Service-layer scaffold with mock data**
