@@ -75,6 +75,25 @@ Defined in `programFinancialRepository.ts`:
 
 ---
 
+## 6. Frontend API Configuration Guardrails (Sprint 10 Checkpoint 86)
+
+### Environment Variables
+- `VITE_API_BASE_URL`: Base URL for backend API (default: `http://localhost:4000/api/v1`)
+- `VITE_FINANCIAL_DATA_SOURCE`: Financial data source, one of `mock` (default) or `api`. Invalid values fall back to `mock`.
+
+See `.env.example` in the project root for usage.
+
+### Frontend Config Module
+- `src/config/appConfig.ts` provides safe access to these variables with defaults and guards.
+- Supported values for `financialDataSource`: `mock`, `api`.
+- Defaults: `apiBaseUrl` = `http://localhost:4000/api/v1`, `financialDataSource` = `mock`.
+- Invalid or missing values for `financialDataSource` will use `mock`.
+
+### Tests
+- See `src/config/appConfig.test.ts` for config module tests.
+
+---
+
 **References:**
 - Frontend repository contract: `src/features/financials/programFinancialRepository.ts`
 - Mock repository: `src/features/financials/mockProgramFinancialRepository.ts`
