@@ -58,6 +58,10 @@
 - Use Eaton Blue as a precision accent, not as a heavy full-screen color.
 - Keep the application mostly neutral, premium, and uncluttered.
 
+### MED Design Tokens
+- See `src/styles/atlasTheme.ts` for the reusable, Eaton-aligned MED design tokens (colors, layout, and typography).
+- All new UI work should use these tokens for consistency and brand alignment.
+
 ## 7. Locked Future Capability Areas
 - Program Financial Workspace
 - Forecast Management
