@@ -71,8 +71,9 @@ function App() {
     exportExcel(projectName, annualRollupRows, monthlyRollupRows);
   }
 
-  return (
-    <AtlasAppShell pageTitle={projectName}>
+  // Only pass the financials content as children
+  const financialsContent = (
+    <>
       <header className="hero-panel">
         <div>
           <p className="eyebrow">Forecast vs Actuals</p>
@@ -336,6 +337,12 @@ function App() {
           );
         })}
       </section>
+    </>
+  );
+
+  return (
+    <AtlasAppShell pageTitle={projectName}>
+      {financialsContent}
     </AtlasAppShell>
   );
 }

@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { atlasTheme } from "../../styles/atlasTheme";
+import { atlasNavigation, AtlasNavItem } from "./navigation";
 
 interface AtlasAppShellProps {
   children: React.ReactNode;
@@ -7,6 +8,47 @@ interface AtlasAppShellProps {
 }
 
 export const AtlasAppShell: React.FC<AtlasAppShellProps> = ({ children, pageTitle }) => {
+  // Local state for selected nav item
+  const [selectedNav, setSelectedNav] = useState<AtlasNavItem>(
+    atlasNavigation.find((item) => item.label === "Program Workspace") || atlasNavigation[0]
+  );
+
+  // Placeholder page content
+  function renderPagePlaceholder(nav: AtlasNavItem) {
+    // Show financials content for Forecasting/Actuals Intake
+    if (nav.label === "Forecasting" || nav.label === "Actuals Intake") {
+      return children;
+    }
+    return (
+      <div style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        gap: "24px",
+        padding: "32px 0 0 0"
+      }}>
+        <h1 style={{
+          fontSize: atlasTheme.typography.title,
+          fontWeight: 700,
+          color: atlasTheme.colors.primary,
+          margin: 0
+        }}>{nav.label}</h1>
+        <p style={{ color: atlasTheme.colors.textSecondary, fontSize: atlasTheme.typography.body, margin: 0 }}>{nav.description}</p>
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          <span style={{
+            background: atlasTheme.colors.surfaceMuted,
+            border: `1px solid ${atlasTheme.colors.border}`,
+            borderRadius: "16px",
+            padding: "4px 12px",
+            color: atlasTheme.colors.textSecondary,
+            fontSize: atlasTheme.typography.body,
+            fontWeight: 500
+          }}>Coming later</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
@@ -28,10 +70,33 @@ export const AtlasAppShell: React.FC<AtlasAppShellProps> = ({ children, pageTitl
           flexDirection: "column",
           alignItems: "center",
           paddingTop: atlasTheme.layout.pagePadding,
+          gap: "8px"
         }}
         data-testid="atlas-app-shell-left-rail"
       >
-        {/* Future nav items go here */}
+        {atlasNavigation.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setSelectedNav(item)}
+            style={{
+              width: "100%",
+              background: selectedNav.id === item.id ? atlasTheme.colors.surface : "transparent",
+              color: selectedNav.id === item.id ? atlasTheme.colors.primary : atlasTheme.colors.textSecondary,
+              border: "none",
+              borderRadius: "8px",
+              padding: "12px 16px",
+              fontWeight: 600,
+              fontSize: atlasTheme.typography.body,
+              textAlign: "left",
+              cursor: "pointer",
+              transition: "background 0.2s, color 0.2s"
+            }}
+            aria-current={selectedNav.id === item.id ? "page" : undefined}
+            data-testid={`atlas-nav-item-${item.id}`}
+          >
+            {item.label}
+          </button>
+        ))}
       </aside>
       {/* Main Area */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
@@ -68,7 +133,7 @@ export const AtlasAppShell: React.FC<AtlasAppShellProps> = ({ children, pageTitl
               }}
               data-testid="atlas-app-shell-page-title"
             >
-              {pageTitle || "Page Title"}
+              {selectedNav.label}
             </span>
           </div>
           <div
@@ -98,7 +163,7 @@ export const AtlasAppShell: React.FC<AtlasAppShellProps> = ({ children, pageTitl
           }}
           data-testid="atlas-app-shell-main"
         >
-          {children}
+          {renderPagePlaceholder(selectedNav)}
         </main>
       </div>
     </div>
