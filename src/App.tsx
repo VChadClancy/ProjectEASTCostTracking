@@ -15,6 +15,7 @@ import {
 } from "./features/financials/financialCalculations";
 import { exportCsv, exportExcel } from "./features/financials/exportService";
 import { getInitialBudget } from "./features/financials/financialService";
+import { AtlasAppShell } from "./components/shell/AtlasAppShell";
 
 function App() {
   const [projectName, setProjectName] = React.useState("Project EAST Budget");
@@ -71,7 +72,7 @@ function App() {
   }
 
   return (
-    <div className="app-shell">
+    <AtlasAppShell pageTitle={projectName}>
       <header className="hero-panel">
         <div>
           <p className="eyebrow">Forecast vs Actuals</p>
@@ -335,7 +336,7 @@ function App() {
           );
         })}
       </section>
-    </div>
+    </AtlasAppShell>
   );
 }
 
