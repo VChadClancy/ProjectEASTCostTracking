@@ -62,6 +62,9 @@
 - See `src/styles/atlasTheme.ts` for the reusable, Eaton-aligned MED design tokens (colors, layout, and typography).
 - All new UI work should use these tokens for consistency and brand alignment.
 
+## 6. Atlas App Shell Documentation
+For detailed documentation on the Atlas App Shell, including its responsibilities, navigation model, design token locations, and future usage, see [atlas-os-app-shell.md](./atlas-os-app-shell.md).
+
 ## 7. Locked Future Capability Areas
 - Program Financial Workspace
 - Forecast Management
