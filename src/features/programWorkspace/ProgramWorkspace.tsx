@@ -93,6 +93,34 @@ export const ProgramWorkspace: React.FC = () => {
             <EmptyState title="No Data" description="No program summary data available." />
           )}
         </WorkspaceCard>
+        {/* Financial Line Preview Section */}
+        <WorkspaceCard
+          title="Financial Line Preview"
+          description="Preview of key financial lines (top 5)"
+          accent={<StatusBadge variant="success">Active</StatusBadge>}
+        >
+          {loading && <EmptyState title="Loading" description="Loading financial lines..." />}
+          {error && <EmptyState title="Error" description={error} />}
+          {!loading && !error && summary && summary.financialLinePreview && summary.financialLinePreview.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {summary.financialLinePreview.map((line) => (
+                <div key={line.id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '4px 0' }}>
+                  <span style={{ minWidth: 80, fontWeight: 500 }}>{line.label}</span>
+                  <span style={{ minWidth: 80 }}>{line.budgetStream || ''}</span>
+                  <span style={{ minWidth: 80 }}>{line.costCategoryKey || ''}</span>
+                  <span style={{ minWidth: 100 }}>{typeof line.forecastAmount === 'number' ? formatCurrency(line.forecastAmount) : ''}</span>
+                  <span style={{ minWidth: 100 }}>{typeof line.actualAmount === 'number' ? formatCurrency(line.actualAmount) : ''}</span>
+                  <span style={{ minWidth: 100 }}>{typeof line.varianceAmount === 'number' ? formatCurrency(line.varianceAmount) : ''}</span>
+                  {line.status && <StatusBadge variant={statusToVariant(line.status.toLowerCase())}>{line.status}</StatusBadge>}
+                </div>
+              ))}
+              <div style={{ color: '#888', fontSize: 13, marginTop: 8 }}>View full management workflow coming later</div>
+            </div>
+          )}
+          {!loading && !error && summary && (!summary.financialLinePreview || summary.financialLinePreview.length === 0) && (
+            <EmptyState title="No Financial Lines" description="No financial lines available for preview." />
+          )}
+        </WorkspaceCard>
         {/* Other primary sections */}
         {primarySections.filter(s => s.id !== 'programFinancialSummary').map((section) => (
           <WorkspaceCard
