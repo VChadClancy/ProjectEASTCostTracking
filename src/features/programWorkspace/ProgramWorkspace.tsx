@@ -49,6 +49,14 @@ export const ProgramWorkspace: React.FC = () => {
             }
           >
             <CapabilityChip label={section.capabilityArea} />
+            {/* Transitional: preserve legacy financials content for Sprint 12 */}
+            {section.title === 'Annual Summary' && (
+              <div style={{marginTop: 16}}>
+                <em>Legacy financials content available in previous releases is preserved here for transition.</em>
+                {/* Placeholders for financials content, to be replaced with real integration as needed */}
+                {/* Example: <LegacyFinancials /> or similar */}
+              </div>
+            )}
           </WorkspaceCard>
         ))}
         {futureSections.map((section) => (
