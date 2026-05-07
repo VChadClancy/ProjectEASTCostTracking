@@ -33,6 +33,15 @@ export interface ProjectCarOverviewItem {
   financialLineCount?: number;
 }
 
+export interface BudgetStreamFundingItem {
+  budgetStream: string;
+  totalBudget: number;
+  totalForecast: number;
+  totalActuals: number;
+  variance: number;
+  financialLineCount: number;
+}
+
 export interface ProgramWorkspaceSummaryViewModel {
   programName: string;
   totalBudget: number;
@@ -47,6 +56,7 @@ export interface ProgramWorkspaceSummaryViewModel {
   varianceSignals?: string[];
   financialLinePreview?: FinancialLinePreviewItem[];
   projectsAndCarsOverview?: ProjectCarOverviewItem[];
+  budgetStreamFunding?: BudgetStreamFundingItem[];
 }
 
 // Adapter function
@@ -79,6 +89,7 @@ export async function getProgramWorkspaceSummary({
         varianceSignals: [],
         financialLinePreview: [],
         projectsAndCarsOverview: [],
+        budgetStreamFunding: [],
       };
     }
     summary = await getProgramFinancialSummary(programId);
@@ -105,6 +116,7 @@ export async function getProgramWorkspaceSummary({
       varianceSignals: [],
       financialLinePreview: [],
       projectsAndCarsOverview: [],
+      budgetStreamFunding: [],
     };
   }
   // Map summary fields to view model, with safe fallbacks
@@ -159,6 +171,44 @@ export async function getProgramWorkspaceSummary({
   }
   const projectsAndCarsOverview = Object.values(projectCarMap).slice(0, 5);
 
+  // --- Budget Stream / Funding Overview ---
+  const budgetStreamMap: Record<string, BudgetStreamFundingItem> = {};
+  if (Array.isArray(financialLines)) {
+    for (const line of financialLines as FinancialLineFull[]) {
+      const stream = typeof line.budgetStream === 'string' && line.budgetStream.trim() ? line.budgetStream.trim() : 'Unspecified';
+      if (!budgetStreamMap[stream]) {
+        budgetStreamMap[stream] = {
+          budgetStream: stream,
+          totalBudget: 0,
+          totalForecast: 0,
+          totalActuals: 0,
+          variance: 0,
+          financialLineCount: 0,
+        };
+      }
+      budgetStreamMap[stream].totalBudget += isFinite(Number((line as any).budget)) ? Number((line as any).budget) : 0;
+      budgetStreamMap[stream].totalForecast += isFinite(Number(line.forecastAmount)) ? Number(line.forecastAmount) : 0;
+      budgetStreamMap[stream].totalActuals += isFinite(Number(line.actualAmount)) ? Number(line.actualAmount) : 0;
+      budgetStreamMap[stream].variance += isFinite(Number(line.varianceAmount)) ? Number(line.varianceAmount) : 0;
+      budgetStreamMap[stream].financialLineCount += 1;
+    }
+  }
+  let budgetStreamFunding = Object.values(budgetStreamMap)
+    .map(item => ({
+      ...item,
+      totalBudget: isFinite(item.totalBudget) ? item.totalBudget : 0,
+      totalForecast: isFinite(item.totalForecast) ? item.totalForecast : 0,
+      totalActuals: isFinite(item.totalActuals) ? item.totalActuals : 0,
+      variance: isFinite(item.variance) ? item.variance : 0,
+      financialLineCount: isFinite(item.financialLineCount) ? item.financialLineCount : 0,
+    }))
+    .sort((a, b) => b.totalBudget - a.totalBudget)
+    .slice(0, 5);
+  // Safe fallback for empty
+  if (!Array.isArray(budgetStreamFunding) || budgetStreamFunding.length === 0) {
+    budgetStreamFunding = [];
+  }
+
   return {
     programName: summary.programName || "",
     totalBudget: isFinite(totalBudget) ? totalBudget : 0,
@@ -173,5 +223,6 @@ export async function getProgramWorkspaceSummary({
     varianceSignals: Array.isArray(summary.varianceSignals) ? summary.varianceSignals : [],
     financialLinePreview: previewLines,
     projectsAndCarsOverview,
+    budgetStreamFunding,
   };
 }

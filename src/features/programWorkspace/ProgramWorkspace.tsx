@@ -150,6 +150,41 @@ export const ProgramWorkspace: React.FC = () => {
             <EmptyState title="No Projects or CARs" description="No active projects or CARs available for overview." />
           )}
         </WorkspaceCard>
+        {/* Budget Stream / Funding Section */}
+        <WorkspaceCard
+          title="Budget Stream / Funding"
+          description="Summary by budget stream or funding source (top 5)"
+          accent={<StatusBadge variant="success">Active</StatusBadge>}
+        >
+          {loading && <EmptyState title="Loading" description="Loading budget streams..." />}
+          {error && <EmptyState title="Error" description={error} />}
+          {!loading && !error && summary && summary.budgetStreamFunding && summary.budgetStreamFunding.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', fontWeight: 600, gap: 16, fontSize: 14, color: '#555', padding: '4px 0' }}>
+                <span style={{ minWidth: 120 }}>Budget Stream</span>
+                <span style={{ minWidth: 100 }}>Total Budget</span>
+                <span style={{ minWidth: 100 }}>Total Forecast</span>
+                <span style={{ minWidth: 100 }}>Total Actuals</span>
+                <span style={{ minWidth: 100 }}>Variance</span>
+                <span style={{ minWidth: 60 }}>Lines</span>
+              </div>
+              {summary.budgetStreamFunding.map((item) => (
+                <div key={item.budgetStream} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '4px 0' }}>
+                  <span style={{ minWidth: 120 }}>{item.budgetStream}</span>
+                  <span style={{ minWidth: 100 }}>{typeof item.totalBudget === 'number' ? formatCurrency(item.totalBudget) : ''}</span>
+                  <span style={{ minWidth: 100 }}>{typeof item.totalForecast === 'number' ? formatCurrency(item.totalForecast) : ''}</span>
+                  <span style={{ minWidth: 100 }}>{typeof item.totalActuals === 'number' ? formatCurrency(item.totalActuals) : ''}</span>
+                  <span style={{ minWidth: 100 }}>{typeof item.variance === 'number' ? formatCurrency(item.variance) : ''}</span>
+                  <span style={{ minWidth: 60 }}>{typeof item.financialLineCount === 'number' ? item.financialLineCount : ''}</span>
+                </div>
+              ))}
+              <div style={{ color: '#888', fontSize: 13, marginTop: 8 }}>Funding rollup for visibility only</div>
+            </div>
+          )}
+          {!loading && !error && summary && (!summary.budgetStreamFunding || summary.budgetStreamFunding.length === 0) && (
+            <EmptyState title="No Budget Streams" description="No budget stream or funding data available." />
+          )}
+        </WorkspaceCard>
         {/* Other primary sections */}
         {primarySections.filter(s => s.id !== 'programFinancialSummary').map((section) => (
           <WorkspaceCard
