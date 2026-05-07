@@ -121,6 +121,35 @@ export const ProgramWorkspace: React.FC = () => {
             <EmptyState title="No Financial Lines" description="No financial lines available for preview." />
           )}
         </WorkspaceCard>
+        {/* Active Projects / CARs Overview Section */}
+        <WorkspaceCard
+          title="Active Projects / CARs Overview"
+          description="Overview of active projects and CARs (top 5)"
+          accent={<StatusBadge variant="success">Active</StatusBadge>}
+        >
+          {loading && <EmptyState title="Loading" description="Loading projects and CARs..." />}
+          {error && <EmptyState title="Error" description={error} />}
+          {!loading && !error && summary && summary.projectsAndCarsOverview && summary.projectsAndCarsOverview.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {summary.projectsAndCarsOverview.map((item) => (
+                <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '4px 0' }}>
+                  <span style={{ minWidth: 80, fontWeight: 500 }}>{item.projectId || item.carId || item.id}</span>
+                  <span style={{ minWidth: 120 }}>{item.projectName || item.carName || ''}</span>
+                  <span style={{ minWidth: 80 }}>{item.status || ''}</span>
+                  <span style={{ minWidth: 100 }}>{typeof item.budget === 'number' && item.budget > 0 ? formatCurrency(item.budget) : ''}</span>
+                  <span style={{ minWidth: 100 }}>{typeof item.forecast === 'number' && item.forecast > 0 ? formatCurrency(item.forecast) : ''}</span>
+                  <span style={{ minWidth: 100 }}>{typeof item.actual === 'number' && item.actual > 0 ? formatCurrency(item.actual) : ''}</span>
+                  <span style={{ minWidth: 100 }}>{typeof item.variance === 'number' && item.variance !== 0 ? formatCurrency(item.variance) : ''}</span>
+                  <span style={{ minWidth: 60 }}>{typeof item.financialLineCount === 'number' && item.financialLineCount > 0 ? item.financialLineCount : ''}</span>
+                </div>
+              ))}
+              <div style={{ color: '#888', fontSize: 13, marginTop: 8 }}>Drill-in management coming later</div>
+            </div>
+          )}
+          {!loading && !error && summary && (!summary.projectsAndCarsOverview || summary.projectsAndCarsOverview.length === 0) && (
+            <EmptyState title="No Projects or CARs" description="No active projects or CARs available for overview." />
+          )}
+        </WorkspaceCard>
         {/* Other primary sections */}
         {primarySections.filter(s => s.id !== 'programFinancialSummary').map((section) => (
           <WorkspaceCard

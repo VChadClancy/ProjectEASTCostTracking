@@ -19,6 +19,20 @@ export interface FinancialLinePreviewItem {
   status?: string;
 }
 
+export interface ProjectCarOverviewItem {
+  id: string;
+  projectId?: string;
+  projectName?: string;
+  carId?: string;
+  carName?: string;
+  status?: string;
+  budget?: number;
+  forecast?: number;
+  actual?: number;
+  variance?: number;
+  financialLineCount?: number;
+}
+
 export interface ProgramWorkspaceSummaryViewModel {
   programName: string;
   totalBudget: number;
@@ -32,6 +46,7 @@ export interface ProgramWorkspaceSummaryViewModel {
   primaryBudgetStreams?: string[];
   varianceSignals?: string[];
   financialLinePreview?: FinancialLinePreviewItem[];
+  projectsAndCarsOverview?: ProjectCarOverviewItem[];
 }
 
 // Adapter function
@@ -63,6 +78,7 @@ export async function getProgramWorkspaceSummary({
         primaryBudgetStreams: [],
         varianceSignals: [],
         financialLinePreview: [],
+        projectsAndCarsOverview: [],
       };
     }
     summary = await getProgramFinancialSummary(programId);
@@ -88,6 +104,7 @@ export async function getProgramWorkspaceSummary({
       primaryBudgetStreams: [],
       varianceSignals: [],
       financialLinePreview: [],
+      projectsAndCarsOverview: [],
     };
   }
   // Map summary fields to view model, with safe fallbacks
@@ -111,6 +128,37 @@ export async function getProgramWorkspaceSummary({
       status: (line as any).status || undefined,
     }));
 
+  // --- Active Projects / CARs Overview ---
+  // Group by projectId or carId, roll up safe fields, limit to top 5
+  const projectCarMap: Record<string, ProjectCarOverviewItem> = {};
+  if (Array.isArray(financialLines)) {
+    for (const line of financialLines as FinancialLineFull[]) {
+      const key = line.projectId || line.carId;
+      if (!key) continue;
+      if (!projectCarMap[key]) {
+        projectCarMap[key] = {
+          id: key,
+          projectId: line.projectId,
+          projectName: (line as any).projectName,
+          carId: line.carId,
+          carName: (line as any).carName,
+          status: (line as any).status,
+          budget: 0,
+          forecast: 0,
+          actual: 0,
+          variance: 0,
+          financialLineCount: 0,
+        };
+      }
+      projectCarMap[key].budget = (projectCarMap[key].budget || 0) + (typeof (line as any).budget === 'number' ? (line as any).budget : 0);
+      projectCarMap[key].forecast = (projectCarMap[key].forecast || 0) + (typeof line.forecastAmount === 'number' ? line.forecastAmount : 0);
+      projectCarMap[key].actual = (projectCarMap[key].actual || 0) + (typeof line.actualAmount === 'number' ? line.actualAmount : 0);
+      projectCarMap[key].variance = (projectCarMap[key].variance || 0) + (typeof line.varianceAmount === 'number' ? line.varianceAmount : 0);
+      projectCarMap[key].financialLineCount = (projectCarMap[key].financialLineCount || 0) + 1;
+    }
+  }
+  const projectsAndCarsOverview = Object.values(projectCarMap).slice(0, 5);
+
   return {
     programName: summary.programName || "",
     totalBudget: isFinite(totalBudget) ? totalBudget : 0,
@@ -124,5 +172,6 @@ export async function getProgramWorkspaceSummary({
     primaryBudgetStreams: Array.isArray(summary.primaryBudgetStreams) ? summary.primaryBudgetStreams : [],
     varianceSignals: Array.isArray(summary.varianceSignals) ? summary.varianceSignals : [],
     financialLinePreview: previewLines,
+    projectsAndCarsOverview,
   };
 }
