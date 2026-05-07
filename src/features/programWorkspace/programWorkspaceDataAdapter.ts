@@ -42,6 +42,13 @@ export interface BudgetStreamFundingItem {
   financialLineCount: number;
 }
 
+export interface ActualsIntakeReadinessItem {
+  id: string;
+  label: string;
+  status: 'future' | 'placeholder';
+  description: string;
+}
+
 export interface ProgramWorkspaceSummaryViewModel {
   programName: string;
   totalBudget: number;
@@ -57,6 +64,7 @@ export interface ProgramWorkspaceSummaryViewModel {
   financialLinePreview?: FinancialLinePreviewItem[];
   projectsAndCarsOverview?: ProjectCarOverviewItem[];
   budgetStreamFunding?: BudgetStreamFundingItem[];
+  actualsIntakeReadiness?: ActualsIntakeReadinessItem[];
 }
 
 // Variance Signal type for lightweight variance signal foundation
@@ -102,6 +110,7 @@ export async function getProgramWorkspaceSummary({
         financialLinePreview: [],
         projectsAndCarsOverview: [],
         budgetStreamFunding: [],
+        actualsIntakeReadiness: [],
       };
     }
     summary = await getProgramFinancialSummary(programId);
@@ -129,6 +138,7 @@ export async function getProgramWorkspaceSummary({
       financialLinePreview: [],
       projectsAndCarsOverview: [],
       budgetStreamFunding: [],
+      actualsIntakeReadiness: [],
     };
   }
   // Map summary fields to view model, with safe fallbacks
@@ -301,6 +311,46 @@ export async function getProgramWorkspaceSummary({
     .filter(sig => allowedSeverities.includes(sig.severity))
     .slice(0, 5);
 
+  // --- Actuals Intake Readiness (future/placeholder) ---
+  const actualsIntakeReadiness: ActualsIntakeReadinessItem[] = [
+    {
+      id: 'configurable-source-locations',
+      label: 'Configurable Source Locations',
+      status: 'future',
+      description: 'Configure SharePoint or other source locations (future)',
+    },
+    {
+      id: 'supplier-invoice-pdfs',
+      label: 'Supplier Invoice PDFs',
+      status: 'future',
+      description: 'PDF invoice ingestion (future)',
+    },
+    {
+      id: 'expense-report-pdfs',
+      label: 'Expense Report PDFs',
+      status: 'future',
+      description: 'Expense report PDF ingestion (future)',
+    },
+    {
+      id: 'labor-excel-csv',
+      label: 'Labor Excel/CSV Intake',
+      status: 'future',
+      description: 'Labor Excel/CSV ingestion (future)',
+    },
+    {
+      id: 'validation-review',
+      label: 'Validation & Review Workflow',
+      status: 'future',
+      description: 'Validation and exception review (future)',
+    },
+    {
+      id: 'source-document-linkage',
+      label: 'Source Document Linkage',
+      status: 'future',
+      description: 'Link source documents to actuals (future)',
+    },
+  ];
+
   return {
     programName: summary.programName || "",
     totalBudget: isFinite(totalBudget) ? totalBudget : 0,
@@ -316,5 +366,6 @@ export async function getProgramWorkspaceSummary({
     financialLinePreview: previewLines,
     projectsAndCarsOverview,
     budgetStreamFunding,
+    actualsIntakeReadiness,
   };
 }

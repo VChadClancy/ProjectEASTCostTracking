@@ -272,4 +272,28 @@ describe("programWorkspaceDataAdapter", () => {
       }
     }
   });
+
+  it("should always include actualsIntakeReadiness marker with all items marked as future/placeholder", async () => {
+    const result = await adapter.getProgramWorkspaceSummary({ summaryData: {}, financialLinesData: [] });
+    expect(Array.isArray(result.actualsIntakeReadiness)).toBe(true);
+    expect(result.actualsIntakeReadiness!.length).toBeGreaterThanOrEqual(5);
+    for (const item of result.actualsIntakeReadiness!) {
+      expect(['future', 'placeholder']).toContain(item.status);
+      // Only block action/workflow labels, not capability nouns
+      expect(item.label).not.toMatch(/Upload Invoice|Post Actuals|Approve Invoice|Run OCR|Start Intake|Process Invoice|Execute Automation/i);
+    }
+  });
+
+  it("should not introduce unsupported workflow labels in actualsIntakeReadiness", async () => {
+    const result = await adapter.getProgramWorkspaceSummary({ summaryData: {}, financialLinesData: [] });
+    const forbidden = [
+      "Upload Invoice", "Post Actuals", "Approve Invoice", "Run OCR", "Start Intake", "Process Invoice", "Execute Automation"
+    ];
+    for (const item of result.actualsIntakeReadiness!) {
+      for (const label of forbidden) {
+        expect(item.label).not.toContain(label);
+        expect(item.description).not.toContain(label);
+      }
+    }
+  });
 });

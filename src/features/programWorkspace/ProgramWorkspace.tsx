@@ -217,6 +217,29 @@ export const ProgramWorkspace: React.FC = () => {
             <EmptyState title="No Budget Streams" description="No budget stream or funding data available." />
           )}
         </WorkspaceCard>
+        {/* Actuals Intake Readiness (future/placeholder) */}
+        <WorkspaceCard
+          title="Actuals Intake Readiness"
+          description="Readiness for future actuals intake engine (all items are future/placeholder)"
+          accent={<StatusBadge variant="neutral">Planned</StatusBadge>}
+        >
+          {loading && <EmptyState title="Loading" description="Loading actuals intake readiness..." />}
+          {error && <EmptyState title="Error" description={error} />}
+          {!loading && !error && summary && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {summary.actualsIntakeReadiness && summary.actualsIntakeReadiness.map(item => (
+                <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '4px 0' }}>
+                  <span style={{ minWidth: 180, fontWeight: 500 }}>{item.label}</span>
+                  <span style={{ minWidth: 320, color: '#888' }}>{item.description}</span>
+                  <StatusBadge variant="neutral">Future</StatusBadge>
+                </div>
+              ))}
+              <div style={{ color: '#888', fontSize: 13, marginTop: 8 }}>
+                All items are future/placeholder. No upload, review, or approval workflow is present.
+              </div>
+            </div>
+          )}
+        </WorkspaceCard>
         {/* Other primary sections */}
         {primarySections.filter(s => s.id !== 'programFinancialSummary').map((section) => (
           <WorkspaceCard
