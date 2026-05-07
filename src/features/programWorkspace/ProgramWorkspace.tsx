@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { getPrimaryProgramWorkspaceSections, getFutureProgramWorkspaceSections } from './programWorkspaceModel';
 import { PageHeader } from '../../components/shell/PageHeader';
 import { WorkspaceCard } from '../../components/shell/WorkspaceCard';
@@ -6,6 +6,15 @@ import { StatusBadge } from '../../components/shell/StatusBadge';
 import { CapabilityChip } from '../../components/shell/CapabilityChip';
 import { EmptyState } from '../../components/shell/EmptyState';
 import { RightRailPlaceholder } from '../../components/shell/RightRailPlaceholder';
+import { getProgramWorkspaceSummary, ProgramWorkspaceSummaryViewModel } from './programWorkspaceDataAdapter';
+
+// Local helpers for formatting
+function formatCurrency(value: number) {
+  return `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+}
+function formatPercent(value: number) {
+  return `${value.toFixed(1)}%`;
+}
 
 // Helper for tests: returns render model metadata
 export function getProgramWorkspaceRenderModel() {
@@ -26,8 +35,33 @@ function statusToVariant(status: string): 'success' | 'info' | 'neutral' {
 }
 
 export const ProgramWorkspace: React.FC = () => {
+  const [summary, setSummary] = useState<ProgramWorkspaceSummaryViewModel | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const primarySections = getPrimaryProgramWorkspaceSections();
   const futureSections = getFutureProgramWorkspaceSections();
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    getProgramWorkspaceSummary()
+      .then((data) => {
+        if (!cancelled) {
+          setSummary(data);
+          setLoading(false);
+        }
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setError('Failed to load summary');
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="program-workspace-root">
@@ -37,7 +71,30 @@ export const ProgramWorkspace: React.FC = () => {
         eyebrow="Financials"
       />
       <div className="program-workspace-cards">
-        {primarySections.map((section) => (
+        {/* Summary Cards */}
+        <WorkspaceCard
+          title="Program Financial Summary"
+          description={summary?.programName || ''}
+          accent={<StatusBadge variant="success">Active</StatusBadge>}
+        >
+          {loading && <EmptyState title="Loading" description="Loading program summary..." />}
+          {error && <EmptyState title="Error" description={error} />}
+          {!loading && !error && summary && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
+              <SummaryMetric label="Total Budget" value={formatCurrency(summary.totalBudget)} />
+              <SummaryMetric label="Total Forecast" value={formatCurrency(summary.totalForecast)} />
+              <SummaryMetric label="Total Actuals" value={formatCurrency(summary.totalActuals)} />
+              <SummaryMetric label="Variance" value={`${formatCurrency(summary.varianceAmount)} (${formatPercent(summary.variancePercent)})`} />
+              <SummaryMetric label="Active Projects" value={summary.activeProjectCount} />
+              <SummaryMetric label="Financial Lines" value={summary.financialLineCount} />
+            </div>
+          )}
+          {!loading && !error && summary && summary.totalBudget === 0 && (
+            <EmptyState title="No Data" description="No program summary data available." />
+          )}
+        </WorkspaceCard>
+        {/* Other primary sections */}
+        {primarySections.filter(s => s.id !== 'programFinancialSummary').map((section) => (
           <WorkspaceCard
             key={section.id}
             title={section.title}
@@ -49,14 +106,6 @@ export const ProgramWorkspace: React.FC = () => {
             }
           >
             <CapabilityChip label={section.capabilityArea} />
-            {/* Transitional: preserve legacy financials content for Sprint 12 */}
-            {section.title === 'Annual Summary' && (
-              <div style={{marginTop: 16}}>
-                <em>Legacy financials content available in previous releases is preserved here for transition.</em>
-                {/* Placeholders for financials content, to be replaced with real integration as needed */}
-                {/* Example: <LegacyFinancials /> or similar */}
-              </div>
-            )}
           </WorkspaceCard>
         ))}
         {futureSections.map((section) => (
@@ -79,3 +128,11 @@ export const ProgramWorkspace: React.FC = () => {
     </div>
   );
 };
+
+// SummaryMetric: simple presentational helper
+const SummaryMetric: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
+  <div style={{ minWidth: 120, marginRight: 24 }}>
+    <div style={{ fontSize: 14, color: '#888', marginBottom: 4 }}>{label}</div>
+    <div style={{ fontWeight: 600, fontSize: 20 }}>{value}</div>
+  </div>
+);
