@@ -53,10 +53,22 @@ export interface ProgramWorkspaceSummaryViewModel {
   activeCarCount: number;
   financialLineCount: number;
   primaryBudgetStreams?: string[];
-  varianceSignals?: string[];
+  varianceSignals?: VarianceSignal[];
   financialLinePreview?: FinancialLinePreviewItem[];
   projectsAndCarsOverview?: ProjectCarOverviewItem[];
   budgetStreamFunding?: BudgetStreamFundingItem[];
+}
+
+// Variance Signal type for lightweight variance signal foundation
+export type VarianceSignalSeverity = 'healthy' | 'attention' | 'risk' | 'info';
+export interface VarianceSignal {
+  id: string;
+  label: string;
+  description: string;
+  varianceAmount: number;
+  variancePercent?: number;
+  severity: VarianceSignalSeverity;
+  relatedArea: 'program' | 'project' | 'CAR' | 'budgetStream' | 'financialLine';
 }
 
 // Adapter function
@@ -209,6 +221,86 @@ export async function getProgramWorkspaceSummary({
     budgetStreamFunding = [];
   }
 
+  // --- Variance Signals (lightweight foundation) ---
+  const allowedSeverities: VarianceSignalSeverity[] = ['healthy', 'attention', 'risk', 'info'];
+  const varianceSignals: VarianceSignal[] = [];
+
+  // 1. Program-level variance
+  if (isFinite(varianceAmount) && Math.abs(varianceAmount) > 0) {
+    let severity: VarianceSignalSeverity = 'healthy';
+    if (Math.abs(variancePercent) > 20) severity = 'risk';
+    else if (Math.abs(variancePercent) > 10) severity = 'attention';
+    else if (Math.abs(variancePercent) > 2) severity = 'info';
+    varianceSignals.push({
+      id: 'program-variance',
+      label: 'Program Variance',
+      description: `Program variance is ${varianceAmount >= 0 ? 'under' : 'over'} budget by ${Math.abs(varianceAmount).toLocaleString()} (${variancePercent.toFixed(1)}%)`,
+      varianceAmount,
+      variancePercent,
+      severity,
+      relatedArea: 'program',
+    });
+  }
+
+  // 2. Top project/CAR variances (by absolute value)
+  if (Array.isArray(projectsAndCarsOverview)) {
+    const sorted = [...projectsAndCarsOverview]
+      .filter(item => isFinite(item.variance ?? 0) && Math.abs(item.variance ?? 0) > 0)
+      .sort((a, b) => Math.abs((b.variance || 0)) - Math.abs((a.variance || 0)))
+      .slice(0, 2);
+    for (const item of sorted) {
+      let percent = 0;
+      if (isFinite(item.budget ?? 0) && (item.budget ?? 0)) {
+        percent = (item.variance ?? 0) / (item.budget ?? 1) * 100;
+      }
+      let severity: VarianceSignalSeverity = 'healthy';
+      if (Math.abs(percent) > 20) severity = 'risk';
+      else if (Math.abs(percent) > 10) severity = 'attention';
+      else if (Math.abs(percent) > 2) severity = 'info';
+      varianceSignals.push({
+        id: `projectcar-${item.id}`,
+        label: item.projectName || item.carName || item.id,
+        description: `Variance for ${item.projectName || item.carName || item.id} is ${item.variance! >= 0 ? 'under' : 'over'} budget by ${Math.abs(item.variance!).toLocaleString()} (${percent.toFixed(1)}%)`,
+        varianceAmount: item.variance!,
+        variancePercent: percent,
+        severity,
+        relatedArea: item.projectId ? 'project' : 'CAR',
+      });
+    }
+  }
+
+  // 3. Top budget stream variances (by absolute value)
+  if (Array.isArray(budgetStreamFunding)) {
+    const sorted = [...budgetStreamFunding]
+      .filter(item => isFinite(item.variance) && Math.abs(item.variance) > 0)
+      .sort((a, b) => Math.abs(b.variance) - Math.abs(a.variance))
+      .slice(0, 2);
+    for (const item of sorted) {
+      let percent = 0;
+      if (isFinite(item.totalBudget ?? 0) && (item.totalBudget ?? 0)) {
+        percent = item.variance / (item.totalBudget ?? 1) * 100;
+      }
+      let severity: VarianceSignalSeverity = 'healthy';
+      if (Math.abs(percent) > 20) severity = 'risk';
+      else if (Math.abs(percent) > 10) severity = 'attention';
+      else if (Math.abs(percent) > 2) severity = 'info';
+      varianceSignals.push({
+        id: `budgetstream-${item.budgetStream}`,
+        label: item.budgetStream,
+        description: `Variance for budget stream ${item.budgetStream} is ${item.variance >= 0 ? 'under' : 'over'} budget by ${Math.abs(item.variance).toLocaleString()} (${percent.toFixed(1)}%)`,
+        varianceAmount: item.variance,
+        variancePercent: percent,
+        severity,
+        relatedArea: 'budgetStream',
+      });
+    }
+  }
+
+  // Limit to top 3-5 signals, filter for allowed severities only
+  const safeVarianceSignals = varianceSignals
+    .filter(sig => allowedSeverities.includes(sig.severity))
+    .slice(0, 5);
+
   return {
     programName: summary.programName || "",
     totalBudget: isFinite(totalBudget) ? totalBudget : 0,
@@ -220,7 +312,7 @@ export async function getProgramWorkspaceSummary({
     activeCarCount: Number(summary.activeCarCount) || 0,
     financialLineCount: Number(summary.financialLineCount) || 0,
     primaryBudgetStreams: Array.isArray(summary.primaryBudgetStreams) ? summary.primaryBudgetStreams : [],
-    varianceSignals: Array.isArray(summary.varianceSignals) ? summary.varianceSignals : [],
+    varianceSignals: safeVarianceSignals,
     financialLinePreview: previewLines,
     projectsAndCarsOverview,
     budgetStreamFunding,

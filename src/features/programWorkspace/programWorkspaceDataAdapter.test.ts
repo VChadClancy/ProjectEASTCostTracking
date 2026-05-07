@@ -205,4 +205,71 @@ describe("programWorkspaceDataAdapter", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
   });
+
+  it("should return a limited varianceSignals list (max 5) with safe fields and allowed severities", async () => {
+    const mockSummary = {
+      programName: 'Test',
+      totalBudget: 1000,
+      totalForecast: 800,
+      totalActuals: 700,
+      varianceAmount: 200,
+      variancePercent: 20,
+      activeProjectCount: 2,
+      activeCarCount: 1,
+      financialLineCount: 3,
+    };
+    const mockLines = [
+      { id: 'FL1', programId: 'P1', projectId: 'PRJ1', budgetStream: 'A', forecastAmount: 100, actualAmount: 90, varianceAmount: 10, budget: 110 },
+      { id: 'FL2', programId: 'P1', projectId: 'PRJ2', budgetStream: 'B', forecastAmount: 200, actualAmount: 180, varianceAmount: 20, budget: 220 },
+      { id: 'FL3', programId: 'P1', carId: 'CAR1', budgetStream: 'A', forecastAmount: 300, actualAmount: 270, varianceAmount: 30, budget: 330 },
+      { id: 'FL4', programId: 'P1', carId: 'CAR2', budgetStream: 'B', forecastAmount: 400, actualAmount: 380, varianceAmount: 20, budget: 420 },
+      { id: 'FL5', programId: 'P1', projectId: 'PRJ3', budgetStream: 'C', forecastAmount: 500, actualAmount: 480, varianceAmount: 20, budget: 520 },
+    ];
+    const result = await adapter.getProgramWorkspaceSummary({ summaryData: mockSummary, financialLinesData: mockLines });
+    expect(Array.isArray(result.varianceSignals)).toBe(true);
+    if (result.varianceSignals) {
+      expect(result.varianceSignals.length).toBeLessThanOrEqual(5);
+      for (const signal of result.varianceSignals) {
+        expect(signal).toHaveProperty('id');
+        expect(signal).toHaveProperty('label');
+        expect(signal).toHaveProperty('description');
+        expect(signal).toHaveProperty('varianceAmount');
+        expect(['healthy', 'attention', 'risk', 'info']).toContain(signal.severity);
+        expect(['program', 'project', 'CAR', 'budgetStream', 'financialLine']).toContain(signal.relatedArea);
+      }
+    }
+  });
+
+  it("should handle empty/zero variance data safely in varianceSignals", async () => {
+    const result = await adapter.getProgramWorkspaceSummary({ summaryData: {}, financialLinesData: [] });
+    expect(Array.isArray(result.varianceSignals)).toBe(true);
+    if (result.varianceSignals) {
+      expect(result.varianceSignals.length).toBe(0);
+    }
+  });
+
+  it("should not introduce unsupported labels or workflow actions in varianceSignals", async () => {
+    const mockSummary = {
+      programName: 'Test',
+      totalBudget: 1000,
+      totalForecast: 800,
+      totalActuals: 700,
+      varianceAmount: 200,
+      variancePercent: 20,
+      activeProjectCount: 2,
+      activeCarCount: 1,
+      financialLineCount: 3,
+    };
+    const result = await adapter.getProgramWorkspaceSummary({ summaryData: mockSummary, financialLinesData: [] });
+    const forbidden = [
+      "AI Variance Explanation", "Auto Correct", "Approve Variance", "Create Project", "Edit Project", "Delete Project"
+    ];
+    if (result.varianceSignals) {
+      for (const signal of result.varianceSignals) {
+        for (const label of forbidden) {
+          expect(JSON.stringify(signal)).not.toContain(label);
+        }
+      }
+    }
+  });
 });

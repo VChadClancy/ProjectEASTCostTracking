@@ -93,6 +93,38 @@ export const ProgramWorkspace: React.FC = () => {
             <EmptyState title="No Data" description="No program summary data available." />
           )}
         </WorkspaceCard>
+        {/* Variance Signals Section */}
+        <WorkspaceCard
+          title="Variance Signals"
+          description="Key variance signals (top 3-5, no AI)"
+          accent={<StatusBadge variant="info">Preview</StatusBadge>}
+        >
+          {loading && <EmptyState title="Loading" description="Loading variance signals..." />}
+          {error && <EmptyState title="Error" description={error} />}
+          {!loading && !error && summary && summary.varianceSignals && summary.varianceSignals.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {summary.varianceSignals.map(signal => (
+                <div key={signal.id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '4px 0' }}>
+                  <span style={{ minWidth: 120, fontWeight: 500 }}>{signal.label}</span>
+                  <span style={{ minWidth: 220 }}>{signal.description}</span>
+                  <span style={{ minWidth: 100 }}>{typeof signal.varianceAmount === 'number' ? formatCurrency(signal.varianceAmount) : ''}</span>
+                  {typeof signal.variancePercent === 'number' && (
+                    <span style={{ minWidth: 80 }}>{formatPercent(signal.variancePercent)}</span>
+                  )}
+                  <StatusBadge 
+                    variant={signal.severity === 'healthy' ? 'success' : signal.severity === 'info' ? 'neutral' : 'info'}
+                  >
+                    {signal.severity.charAt(0).toUpperCase() + signal.severity.slice(1)}
+                  </StatusBadge>
+                  <span style={{ minWidth: 100, color: '#888', fontSize: 13 }}>{signal.relatedArea}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {!loading && !error && summary && (!summary.varianceSignals || summary.varianceSignals.length === 0) && (
+            <EmptyState title="No Variance Signals" description="No significant variance signals detected." />
+          )}
+        </WorkspaceCard>
         {/* Financial Line Preview Section */}
         <WorkspaceCard
           title="Financial Line Preview"
