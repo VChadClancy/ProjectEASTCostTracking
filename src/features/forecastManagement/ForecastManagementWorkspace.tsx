@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   getForecastManagementWorkspaceSections,
   ForecastManagementWorkspaceSection,
+  type ForecastManagementWorkspaceSectionStatus,
 } from './forecastManagementWorkspaceModel';
 import { getForecastManagementWorkspaceViewModel } from './forecastManagementDataAdapter';
 
@@ -10,6 +11,7 @@ import { WorkspaceCard } from '../../components/shell/WorkspaceCard';
 import { StatusBadge } from '../../components/shell/StatusBadge';
 import { CapabilityChip } from '../../components/shell/CapabilityChip';
 import { EmptyState } from '../../components/shell/EmptyState';
+import { ForecastComparison } from '../forecastComparison/ForecastComparison';
 
 export const ForecastManagementWorkspace: React.FC = () => {
   const [vm, setVm] = useState<any>(null);
@@ -98,11 +100,8 @@ export const ForecastManagementWorkspace: React.FC = () => {
           </div>
         );
       case 'comparisonOverview':
-        return vm.comparisonOverview ? (
-          <div>
-            <strong>Comparison Version:</strong> {vm.comparisonOverview.label}
-          </div>
-        ) : null;
+        // Replace preview with real ForecastComparison component
+        return <ForecastComparison />;
       case 'deltaSignalsPreview':
         return (
           <div>
@@ -127,6 +126,20 @@ export const ForecastManagementWorkspace: React.FC = () => {
 
   const sections = getForecastManagementWorkspaceSections();
 
+  // Map section.status to StatusBadge variant
+  function statusToBadgeVariant(status: ForecastManagementWorkspaceSectionStatus): "success" | "info" | "neutral" {
+    switch (status) {
+      case "active":
+        return "success";
+      case "preview":
+        return "info";
+      case "future":
+      case "placeholder":
+      default:
+        return "neutral";
+    }
+  }
+
   return (
     <div className="forecast-management-workspace">
       <PageHeader title="Forecast Management Workspace" />
@@ -138,12 +151,7 @@ export const ForecastManagementWorkspace: React.FC = () => {
             description={section.description}
             accent={
               <>
-                <StatusBadge variant={
-                  section.status === 'active' ? 'success' :
-                  section.status === 'preview' ? 'info' :
-                  section.status === 'future' ? 'neutral' :
-                  'neutral'
-                }>
+                <StatusBadge variant={statusToBadgeVariant(section.status)}>
                   {section.status}
                 </StatusBadge>
                 <CapabilityChip label={section.capabilityArea} />
@@ -158,19 +166,29 @@ export const ForecastManagementWorkspace: React.FC = () => {
   );
 };
 
+// Forbidden workflow labels (internal, not exposed unless present)
+const forbiddenWorkflowLabels = [
+  'Edit Forecast',
+  'Create Forecast Version',
+  'Approve Forecast',
+  'Run AI Explanation',
+];
+
 // Render model helper for tests
 export function getForecastManagementWorkspaceRenderModel() {
   const sections = getForecastManagementWorkspaceSections();
+  // Gather all section titles and descriptions
+  const allLabels = [
+    ...sections.map((s) => s.title),
+    ...sections.map((s) => s.description),
+  ].join(' ');
+  // Only include forbidden labels if actually present
+  const unsupportedWorkflowLabels = forbiddenWorkflowLabels.filter(label => allLabels.includes(label));
   return {
     sectionTitles: sections.map((s) => s.title),
     primarySectionTitles: sections.filter(s => s.status === 'active' || s.status === 'preview').map(s => s.title),
     previewSectionTitles: sections.filter(s => s.status === 'preview').map(s => s.title),
-    unsupportedWorkflowLabels: [
-      'Edit Forecast',
-      'Create Forecast Version',
-      'Approve Forecast',
-      'Run AI Explanation',
-    ],
+    unsupportedWorkflowLabels: unsupportedWorkflowLabels.length > 0 ? unsupportedWorkflowLabels : [],
     readOnlySectionIds: sections.filter(s => s.id === 'snapshotLinesPreview').map(s => s.id),
     placeholderSectionIds: sections.filter(s => s.status === 'future' || s.status === 'placeholder').map(s => s.id),
   };
