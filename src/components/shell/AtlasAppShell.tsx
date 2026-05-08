@@ -1,17 +1,40 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { atlasTheme } from "../../styles/atlasTheme";
 import { atlasNavigation, AtlasNavItem } from "./navigation";
 
 interface AtlasAppShellProps {
   children: React.ReactNode;
   pageTitle?: string;
+  activePageId?: string;
+  onNavigate?: (pageId: string) => void;
 }
 
-export const AtlasAppShell: React.FC<AtlasAppShellProps> = ({ children, pageTitle }) => {
-  // Local state for selected nav item
-  const [selectedNav, setSelectedNav] = useState<AtlasNavItem>(
+export const AtlasAppShell: React.FC<AtlasAppShellProps> = ({ children, pageTitle, activePageId, onNavigate }) => {
+  // Local state for uncontrolled usage
+  const [internalNav, setInternalNav] = useState(
     atlasNavigation.find((item) => item.label === "Program Workspace") || atlasNavigation[0]
   );
+
+  // Controlled vs uncontrolled nav selection
+  const selectedNav = activePageId
+    ? atlasNavigation.find((item) => item.id === activePageId) || atlasNavigation[0]
+    : internalNav;
+
+  // Keep internalNav in sync if controlled
+  useEffect(() => {
+    if (activePageId) {
+      const nav = atlasNavigation.find((item) => item.id === activePageId);
+      if (nav) setInternalNav(nav);
+    }
+  }, [activePageId]);
+
+  function handleNavClick(item: AtlasNavItem) {
+    if (onNavigate) {
+      onNavigate(item.id);
+    } else {
+      setInternalNav(item);
+    }
+  }
 
   // Placeholder page content
   function renderPagePlaceholder(nav: AtlasNavItem) {
@@ -77,7 +100,7 @@ export const AtlasAppShell: React.FC<AtlasAppShellProps> = ({ children, pageTitl
         {atlasNavigation.map((item) => (
           <button
             key={item.id}
-            onClick={() => setSelectedNav(item)}
+            onClick={() => handleNavClick(item)}
             style={{
               width: "100%",
               background: selectedNav.id === item.id ? atlasTheme.colors.surface : "transparent",
