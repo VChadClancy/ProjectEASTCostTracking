@@ -1,70 +1,69 @@
-# Sprint 13: Forecast Versioning + Delta Analysis
+# Sprint 13: Forecast Versioning + Delta Analysis — Checkpoint 123 Update
 
-## 1. Sprint 13 Objective
-Build the data model and service foundation for saved monthly forecast versions and delta analysis.
+## 1. Implemented Domain Model
+- **Scope:** Supports both program and project forecast versions
+- **Kind:** Supports baseline, current, prior, monthlySnapshot, and scenario kinds
+- **Status:** Supports draft, active, locked, and archived status
+- **Snapshot Lines:** Canonical `snapshotLines` array for all forecast line data
+- **Monthly Snapshots:** Native support for monthly snapshot versions
 
-## 2. Locked Capability
-- **Forecast Versioning + Delta Analysis**
-- Project forecast versions
-- Program budget forecast versions
-- Monthly forecast snapshots
-- Baseline / current / prior version classification
-- Version-to-version comparison
-- Baseline-to-current comparison
-- Forecast vs actual comparison readiness
-- Project-to-program rollup comparison readiness
+## 2. Delta Calculation Service
+- Calculates amount delta and percent delta between versions
+- Handles zero-base (division by zero, missing data) scenarios
+- Handles missing, new, and removed snapshot lines
+- Groups deltas by project, CAR, budget stream, and cost category
+- Classifies severity (low, medium, high) for each delta
 
-## 3. Required Behavior
-- Save monthly forecast snapshots
-- Retrieve forecast versions
-- Compare two forecast versions
-- Calculate amount delta
-- Calculate percent delta
-- Calculate monthly movement
-- Calculate cumulative movement
-- Analyze delta by project, CAR, budget stream, and cost category
+## 3. Mock Repository
+- Provides deterministic mock forecast versions for both program and project
+- Includes baseline, current, and monthly snapshot examples
+- Supports save, retrieve, filter, and compare operations
+- Enables program budget forecast and project forecast example data
 
-## 4. Example Version Names
-- Project Forecast — January Version
-- Project Forecast — February Version
-- Program Budget Forecast — January Version
-- Program Budget Forecast — February Version
+## 4. Service Layer
+- Implements:
+  - `getForecastVersions`
+  - `getForecastVersionById`
+  - `getForecastVersionsByProgramId`
+  - `getForecastVersionsByProjectId`
+  - `saveForecastVersion`
+  - `compareForecastVersions`
+- Default behavior is mock-backed
+- Controlled API-mode behavior supported for integration
 
-## 5. In Scope for Sprint 13
-- Typed frontend/domain forecast version model if appropriate
-- Backend/shared forecast version types if appropriate
-- Repository contracts
-- Mock repository implementation
-- Service layer for save/retrieve/compare
-- Delta calculation helper/service
-- Tests for save/retrieve/compare/delta behavior
-- Documentation updates
+## 5. View Model Adapter
+- Produces selector items for version pickers
+- Produces summary card models for forecast versions
+- Produces comparison view models for delta analysis
+- Produces delta signal models for grouped deltas
+- Produces snapshot summary models
+- Provides user-friendly labels (e.g., Program Budget Forecast, Project Forecast)
 
-## 6. Out of Scope for Sprint 13
-- Full Forecast Management UI
+## 6. Out of Scope (Intentionally Not Implemented in Sprint 13)
+- Forecast Management UI
 - Forecast grid editing
 - Delta visualization UI
+- Backend API routes
+- Prisma schema migration
 - Approval workflow
 - Actuals intake
 - AI explanation engine
-- Production persistence expansion unless explicitly required
-- `schema.prisma` changes unless specifically approved later in the sprint
+- Production persistence
 
-## 7. MED Product Guardrails
-- Forecast versioning is a control capability, not a cluttered version list.
-- UI later should use clean version selectors, comparison cards, and progressive disclosure.
-- Delta analysis should support executive insight and operator drill-down.
+## 7. Sprint 14 Handoff & Next Steps
+- **Forecast Management Workspace v1** can now consume:
+  - Forecast version service
+  - Repository selector/factory
+  - View model adapter
+  - Delta calculation service
+- **Recommended Sprint 14 Focus:**
+  - MED Forecast Management Workspace
+  - Version selector UI
+  - Forecast version summary cards
+  - Basic read-only snapshot view
+  - Comparison entry point
+  - No heavy grid editing unless explicitly approved
 
-## 8. Runtime Guardrails
-- Frontend default remains mock
-- Optional frontend API mode remains available
-- Backend default remains mock
-- Guarded Prisma FinancialLine path remains unchanged
+---
 
-## 9. Engineering Rules
-- Do not add dependencies.
-- Do not change `package.json`/`package-lock.json`.
-- Do not change GitHub Actions.
-- Do not implement UI in this checkpoint.
-- Do not implement AI behavior.
-- Do not implement actuals intake.
+**Sprint 13 is now complete for the forecast versioning data model, delta analysis, and supporting service layers. UI and persistence expansion are deferred to Sprint 14.**
