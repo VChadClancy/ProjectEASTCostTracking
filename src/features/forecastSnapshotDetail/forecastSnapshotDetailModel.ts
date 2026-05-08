@@ -129,6 +129,17 @@ export interface ForecastSnapshotSelectedLineDetailViewModel {
   isReadOnly: true;
 }
 
+// Extended view model for formatted display fields (for adapter only)
+export interface ForecastSnapshotSelectedLineDetailViewModelWithFormatted extends ForecastSnapshotSelectedLineDetailViewModel {
+  formattedForecast?: string;
+  formattedActual?: string;
+  formattedBudget?: string;
+  formattedVariance?: string;
+  formattedVariancePercent?: string;
+  formattedDeltaAmount?: string;
+  formattedDeltaPercent?: string;
+}
+
 // Render model for the drawer (excludes unsupported labels and forecastVersionId)
 export interface ForecastSnapshotDetailDrawerRenderModel {
   sections: ForecastSnapshotDetailDrawerSection[];
