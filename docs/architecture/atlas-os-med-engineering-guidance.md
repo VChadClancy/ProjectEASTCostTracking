@@ -75,5 +75,8 @@ For detailed documentation on the Atlas App Shell, including its responsibilitie
 - Governance Controls
 - Embedded AI Intelligence
 
+## 6. Locked Core Capabilities Reference
+- **Forecast Versioning + Delta Analysis**: Atlas OS supports locked, auditable monthly forecast versions and delta analysis at both project and program levels. This enables version-to-version, baseline-to-current, and forecast vs actual comparisons, supporting executive insight and operator drill-down. See `sprint-13-forecast-versioning-delta-analysis.md` for details.
+
 ## 8. Engineering Rule
 - Every Sprint 11 UI decision should support the MED shell and not introduce feature-heavy workflow complexity.
