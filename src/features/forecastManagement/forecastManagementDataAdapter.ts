@@ -68,8 +68,19 @@ export async function getForecastManagementWorkspaceViewModel({
   // Summaries
   const currentVersionSummary = buildForecastVersionSummary(currentVersion);
   const snapshotSummary = buildForecastVersionSnapshotSummary(currentVersion);
-  // Snapshot lines preview
-  const snapshotLinesPreview = Array.isArray(currentVersion?.snapshotLines) ? currentVersion.snapshotLines.slice(0, maxSnapshotLines) : [];
+  // Snapshot lines preview (map to user-facing fields, defaulting missing numbers to 0)
+  const snapshotLinesPreview = Array.isArray(currentVersion?.snapshotLines)
+    ? currentVersion.snapshotLines.slice(0, maxSnapshotLines).map((line: any) => ({
+        project: line.projectName || line.project || '-',
+        month: line.month || '-',
+        costCategory: line.costCategory || '-',
+        budgetStream: line.budgetStream || '-',
+        forecast: Number.isFinite(line.forecastAmount) ? line.forecastAmount : 0,
+        actual: Number.isFinite(line.actualAmount) ? line.actualAmount : 0,
+        budget: Number.isFinite(line.budgetAmount) ? line.budgetAmount : 0,
+        variance: Number.isFinite(line.varianceAmount) ? line.varianceAmount : 0,
+      }))
+    : [];
   // Recent versions
   const recentVersions = versions.slice(0, maxRecentVersions);
   // Comparison overview (use summary or id/title)
@@ -140,7 +151,18 @@ export function buildForecastManagementWorkspaceViewModelFromVersions(versions: 
   const selectorItems = buildForecastVersionSelectorItems(versions);
   const currentVersionSummary = buildForecastVersionSummary(currentVersion);
   const snapshotSummary = buildForecastVersionSnapshotSummary(currentVersion);
-  const snapshotLinesPreview = Array.isArray(currentVersion?.snapshotLines) ? currentVersion.snapshotLines.slice(0, maxSnapshotLines) : [];
+  const snapshotLinesPreview = Array.isArray(currentVersion?.snapshotLines)
+    ? currentVersion.snapshotLines.slice(0, maxSnapshotLines).map((line: any) => ({
+        project: line.projectName || line.project || '-',
+        month: line.month || '-',
+        costCategory: line.costCategory || '-',
+        budgetStream: line.budgetStream || '-',
+        forecast: Number.isFinite(line.forecastAmount) ? line.forecastAmount : 0,
+        actual: Number.isFinite(line.actualAmount) ? line.actualAmount : 0,
+        budget: Number.isFinite(line.budgetAmount) ? line.budgetAmount : 0,
+        variance: Number.isFinite(line.varianceAmount) ? line.varianceAmount : 0,
+      }))
+    : [];
   const recentVersions = versions.slice(0, maxRecentVersions);
   const comparisonOverview = comparisonVersion ? buildForecastVersionSummary(comparisonVersion) : null;
   let deltaSignalsPreview: any[] = [];

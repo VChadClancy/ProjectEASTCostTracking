@@ -63,12 +63,23 @@ export function ForecastComparison() {
     return () => { mounted = false; };
   }, []);
 
+  // Defensive normalization for all mapped fields
+  const deltaSummaryCards = Array.isArray(model?.deltaSummaryCards) ? model.deltaSummaryCards : [];
+  const monthlyMovementSummary = Array.isArray(model?.monthlyMovementSummary) ? model.monthlyMovementSummary : [];
+  const groupedDeltaPanels = typeof model?.groupedDeltaPanels === 'object' && model?.groupedDeltaPanels !== null ? model.groupedDeltaPanels : {};
+  const projectDeltas = Array.isArray(model?.projectDeltas) ? model.projectDeltas : [];
+  const carDeltas = Array.isArray(model?.carDeltas) ? model.carDeltas : [];
+  const budgetStreamDeltas = Array.isArray(model?.budgetStreamDeltas) ? model.budgetStreamDeltas : [];
+  const costCategoryDeltas = Array.isArray(model?.costCategoryDeltas) ? model.costCategoryDeltas : [];
+  const deltaSignalsDetail = Array.isArray(model?.deltaSignalsDetail) ? model.deltaSignalsDetail : [];
+  const readOnlyComparisonPreview = Array.isArray(model?.readOnlyComparisonPreview) ? model.readOnlyComparisonPreview : [];
+
   if (loading) return <EmptyState title="Loading Forecast Comparison..." />;
   if (error) return <EmptyState title="Error" description={error} />;
   if (!model || model.empty) return <EmptyState title="No Comparison Data" description="Select forecast versions to compare." />;
 
   return (
-    <div className="forecast-comparison" style={{ background: atlasTheme.colors.background, padding: atlasTheme.layout.pagePadding }}>
+    <div className="forecast-comparison" data-testid="forecast-comparison" style={{ display: 'block', background: atlasTheme.colors.background, color: atlasTheme.colors.textPrimary, padding: atlasTheme.layout.pagePadding, minHeight: '40vh' }}>
       <PageHeader title="Forecast Comparison" />
       <WorkspaceCard title="Version Pair Selector">
         <div style={{ display: 'flex', gap: '32px' }}>
@@ -88,42 +99,82 @@ export function ForecastComparison() {
       </WorkspaceCard>
       <WorkspaceCard title="Delta Summary Cards">
         <div style={{ display: 'flex', gap: '24px' }}>
-          {model.deltaSummaryCards?.map((card: any, idx: number) => (
-            <div key={idx} style={{ flex: 1, background: atlasTheme.colors.surface, borderRadius: atlasTheme.layout.cardRadius, border: `1px solid ${atlasTheme.colors.border}`, padding: 16, boxShadow: atlasTheme.layout.cardShadow }}>
-              <div style={{ color: atlasTheme.colors.textSecondary, fontSize: atlasTheme.typography.caption }}>{card.label}</div>
-              <div style={{ color: atlasTheme.colors.textPrimary, fontSize: atlasTheme.typography.title, fontWeight: 600 }}>{formatCurrency(card.value)}</div>
-            </div>
-          ))}
+          {deltaSummaryCards.length === 0 ? (
+            <EmptyState title="No Delta Summary" description="No delta summary cards available." />
+          ) : (
+            deltaSummaryCards.map((card: any, idx: number) => (
+              <div key={card.id || idx} style={{ flex: 1, background: atlasTheme.colors.surface, borderRadius: atlasTheme.layout.cardRadius, border: `1px solid ${atlasTheme.colors.border}`, padding: 16, boxShadow: atlasTheme.layout.cardShadow }}>
+                <div style={{ color: atlasTheme.colors.textSecondary, fontSize: atlasTheme.typography.caption }}>{card.label}</div>
+                <div style={{ color: atlasTheme.colors.textPrimary, fontSize: atlasTheme.typography.title, fontWeight: 600 }}>{formatCurrency(card.value)}</div>
+                {card.secondaryValue !== undefined && (
+                  <div style={{ color: atlasTheme.colors.textSecondary, fontSize: atlasTheme.typography.body }}>{card.secondaryValue}%</div>
+                )}
+              </div>
+            ))
+          )}
         </div>
       </WorkspaceCard>
       <WorkspaceCard title="Monthly Movement Summary">
-        <div>{model.monthlyMovementSummary?.length ? 'Monthly movement data' : 'No monthly movement'}</div>
+        <div>{monthlyMovementSummary.length ? 'Monthly movement data' : 'No monthly movement'}</div>
       </WorkspaceCard>
       <WorkspaceCard title="Grouped Delta Panels">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
           <div style={{ background: atlasTheme.colors.surface, borderRadius: atlasTheme.layout.cardRadius, border: `1px solid ${atlasTheme.colors.border}`, padding: 16 }}>
             <strong>Project Deltas</strong>
-            <div>{model.projectDeltas?.length ? model.projectDeltas.length : 0}</div>
+            <div>{projectDeltas.length ? projectDeltas.length : 0}</div>
           </div>
           <div style={{ background: atlasTheme.colors.surface, borderRadius: atlasTheme.layout.cardRadius, border: `1px solid ${atlasTheme.colors.border}`, padding: 16 }}>
             <strong>CAR Deltas</strong>
-            <div>{model.carDeltas?.length ? model.carDeltas.length : 0}</div>
+            <div>{carDeltas.length ? carDeltas.length : 0}</div>
           </div>
           <div style={{ background: atlasTheme.colors.surface, borderRadius: atlasTheme.layout.cardRadius, border: `1px solid ${atlasTheme.colors.border}`, padding: 16 }}>
             <strong>Budget Stream Deltas</strong>
-            <div>{model.budgetStreamDeltas?.length ? model.budgetStreamDeltas.length : 0}</div>
+            <div>{budgetStreamDeltas.length ? budgetStreamDeltas.length : 0}</div>
           </div>
           <div style={{ background: atlasTheme.colors.surface, borderRadius: atlasTheme.layout.cardRadius, border: `1px solid ${atlasTheme.colors.border}`, padding: 16 }}>
             <strong>Cost Category Deltas</strong>
-            <div>{model.costCategoryDeltas?.length ? model.costCategoryDeltas.length : 0}</div>
+            <div>{costCategoryDeltas.length ? costCategoryDeltas.length : 0}</div>
           </div>
         </div>
       </WorkspaceCard>
       <WorkspaceCard title="Delta Signals Detail">
-        <div>{model.deltaSignalsDetail?.length ? 'Delta signals present' : 'No delta signals'}</div>
+        <div>{deltaSignalsDetail.length ? 'Delta signals present' : 'No delta signals'}</div>
       </WorkspaceCard>
       <WorkspaceCard title="Read-Only Comparison Preview" accent={<CapabilityChip label="Read-Only Preview" />}>
-        <div style={{ color: atlasTheme.colors.textSecondary }}>{model.readOnlyComparisonPreview?.length ? 'Preview data' : 'No preview data'}</div>
+        {readOnlyComparisonPreview.length === 0 ? (
+          <div style={{ color: atlasTheme.colors.textSecondary }}>No preview data</div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', background: atlasTheme.colors.surface, borderRadius: atlasTheme.layout.cardRadius }}>
+              <thead>
+                <tr style={{ background: atlasTheme.colors.background }}>
+                  <th style={{ padding: '6px 12px', textAlign: 'left', color: atlasTheme.colors.textSecondary }}>Project</th>
+                  <th style={{ padding: '6px 12px', textAlign: 'left', color: atlasTheme.colors.textSecondary }}>Month</th>
+                  <th style={{ padding: '6px 12px', textAlign: 'left', color: atlasTheme.colors.textSecondary }}>Cost Category</th>
+                  <th style={{ padding: '6px 12px', textAlign: 'left', color: atlasTheme.colors.textSecondary }}>Budget Stream</th>
+                  <th style={{ padding: '6px 12px', textAlign: 'right', color: atlasTheme.colors.textSecondary }}>Forecast</th>
+                  <th style={{ padding: '6px 12px', textAlign: 'right', color: atlasTheme.colors.textSecondary }}>Actual</th>
+                  <th style={{ padding: '6px 12px', textAlign: 'right', color: atlasTheme.colors.textSecondary }}>Budget</th>
+                  <th style={{ padding: '6px 12px', textAlign: 'right', color: atlasTheme.colors.textSecondary }}>Variance</th>
+                </tr>
+              </thead>
+              <tbody>
+                {readOnlyComparisonPreview.map((line: any, idx: number) => (
+                  <tr key={idx} style={{ borderBottom: `1px solid ${atlasTheme.colors.border}` }}>
+                    <td style={{ padding: '6px 12px' }}>{line.projectName || line.project || '-'}</td>
+                    <td style={{ padding: '6px 12px' }}>{line.month || '-'}</td>
+                    <td style={{ padding: '6px 12px' }}>{line.costCategory || '-'}</td>
+                    <td style={{ padding: '6px 12px' }}>{line.budgetStream || '-'}</td>
+                    <td style={{ padding: '6px 12px', textAlign: 'right' }}>{formatCurrency(line.forecast)}</td>
+                    <td style={{ padding: '6px 12px', textAlign: 'right' }}>{formatCurrency(line.actual)}</td>
+                    <td style={{ padding: '6px 12px', textAlign: 'right' }}>{formatCurrency(line.budget)}</td>
+                    <td style={{ padding: '6px 12px', textAlign: 'right' }}>{formatCurrency(line.variance)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </WorkspaceCard>
     </div>
   );

@@ -28,10 +28,12 @@ describe('ForecastComparisonDataAdapter', () => {
 
   it('includes delta summary cards with finite values', async () => {
     const vm = await buildForecastComparisonViewModel();
-    expect(vm.deltaSummaryCards).toBeTruthy();
-    if (vm.deltaSummaryCards) {
-      expect(Number.isFinite(vm.deltaSummaryCards.amountDelta)).toBe(true);
-      expect(Number.isFinite(vm.deltaSummaryCards.percentDelta)).toBe(true);
+    expect(Array.isArray(vm.deltaSummaryCards)).toBe(true);
+    if (vm.deltaSummaryCards.length > 0) {
+      const card = vm.deltaSummaryCards[0];
+      expect(Number.isFinite(card.value)).toBe(true);
+      expect(card.label).toBeDefined();
+      expect(['low', 'medium', 'high']).toContain(card.severity);
     }
   });
 
@@ -91,5 +93,36 @@ describe('ForecastComparisonDataAdapter', () => {
     forbidden.forEach(label => {
       expect(asString.includes(label)).toBe(false);
     });
+  });
+
+  it('includes delta summary cards as an array with stable fields', async () => {
+    const vm = await buildForecastComparisonViewModel();
+    expect(Array.isArray(vm.deltaSummaryCards)).toBe(true);
+    if (vm.deltaSummaryCards.length > 0) {
+      const card = vm.deltaSummaryCards[0];
+      expect(card).toHaveProperty('id');
+      expect(card).toHaveProperty('label');
+      expect(card).toHaveProperty('value');
+      expect(card).toHaveProperty('severity');
+    }
+  });
+
+  it('handles empty or non-array deltaSummaryCards safely', async () => {
+    // Simulate empty comparison
+    const vm = await buildForecastComparisonViewModel({ baseVersionId: 'none', comparisonVersionId: 'none' });
+    expect(Array.isArray(vm.deltaSummaryCards)).toBe(true);
+    expect(vm.deltaSummaryCards.length).toBe(0);
+  });
+
+  it('all mapped fields are always arrays', async () => {
+    const vm = await buildForecastComparisonViewModel();
+    expect(Array.isArray(vm.deltaSummaryCards)).toBe(true);
+    expect(Array.isArray(vm.monthlyMovementSummary)).toBe(true);
+    expect(Array.isArray(vm.projectDeltas)).toBe(true);
+    expect(Array.isArray(vm.carDeltas)).toBe(true);
+    expect(Array.isArray(vm.budgetStreamDeltas)).toBe(true);
+    expect(Array.isArray(vm.costCategoryDeltas)).toBe(true);
+    expect(Array.isArray(vm.deltaSignalsDetail)).toBe(true);
+    expect(Array.isArray(vm.readOnlyComparisonPreview)).toBe(true);
   });
 });

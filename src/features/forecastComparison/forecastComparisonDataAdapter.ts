@@ -16,11 +16,21 @@ import {
 } from '../forecastVersions/forecastVersionViewModelAdapter';
 import type { ForecastVersion } from '../forecastVersions/forecastVersionTypes';
 
+export interface DeltaSummaryCard {
+  id: string;
+  label: string;
+  value: number;
+  secondaryValue?: number;
+  severity: 'low' | 'medium' | 'high';
+  leftVersion: ReturnType<typeof buildForecastVersionSummary>;
+  rightVersion: ReturnType<typeof buildForecastVersionSummary>;
+}
+
 export interface ForecastComparisonViewModel {
   baseVersion: ReturnType<typeof buildForecastVersionSummary> | null;
   comparisonVersion: ReturnType<typeof buildForecastVersionSummary> | null;
   versionPairSelector: ReturnType<typeof buildForecastVersionSelectorItems>;
-  deltaSummaryCards: ReturnType<typeof buildForecastVersionComparisonViewModel> | null;
+  deltaSummaryCards: DeltaSummaryCard[];
   monthlyMovementSummary: any[];
   groupedDeltaPanels: Record<string, any[]>;
   projectDeltas: any[];
@@ -90,35 +100,35 @@ export async function buildForecastComparisonViewModel({
   const versionPairSelector = buildForecastVersionSelectorItems(versions);
   const baseSummary = buildForecastVersionSummary(baseVersion);
   const comparisonSummary = buildForecastVersionSummary(comparisonVersion);
-  const deltaSummaryCards = comparison && baseVersion && comparisonVersion
+  // Normalize deltaSummaryCards to always be an array of summary card objects
+  const rawDeltaSummary = comparison && baseVersion && comparisonVersion
     ? buildForecastVersionComparisonViewModel(comparison, baseVersion, comparisonVersion)
     : null;
+  const deltaSummaryCards = rawDeltaSummary ? [{
+    id: 'delta-summary',
+    label: 'Delta',
+    value: rawDeltaSummary.amountDelta,
+    secondaryValue: rawDeltaSummary.percentDelta,
+    severity: rawDeltaSummary.severity,
+    leftVersion: rawDeltaSummary.leftVersion,
+    rightVersion: rawDeltaSummary.rightVersion,
+  }] : [];
 
-  // 5. Grouped deltas (mock: just use delta signals, group by type if available)
+  // Defensive normalization for all mapped fields
+  function safeArray(val: any): any[] { return Array.isArray(val) ? val : []; }
   const groupedDeltaPanels: Record<string, any[]> = {
-    project: finiteLimited(comparison?.deltas?.filter((d: any) => d.group === 'project'), 5),
-    car: finiteLimited(comparison?.deltas?.filter((d: any) => d.group === 'car'), 5),
-    budgetStream: finiteLimited(comparison?.deltas?.filter((d: any) => d.group === 'budgetStream'), 5),
-    costCategory: finiteLimited(comparison?.deltas?.filter((d: any) => d.group === 'costCategory'), 5),
+    project: safeArray(comparison?.deltas?.filter((d: any) => d.group === 'project')).slice(0, 5),
+    car: safeArray(comparison?.deltas?.filter((d: any) => d.group === 'car')).slice(0, 5),
+    budgetStream: safeArray(comparison?.deltas?.filter((d: any) => d.group === 'budgetStream')).slice(0, 5),
+    costCategory: safeArray(comparison?.deltas?.filter((d: any) => d.group === 'costCategory')).slice(0, 5),
   };
-
-  // 6. Monthly movement summary (mock: just use deltas by month)
-  const monthlyMovementSummary = finiteLimited(comparison?.deltas?.filter((d: any) => d.group === 'month'), 5);
-
-  // 7. Individual group arrays (limit 5)
+  const monthlyMovementSummary = safeArray(comparison?.deltas?.filter((d: any) => d.group === 'month')).slice(0, 5);
   const projectDeltas = groupedDeltaPanels.project;
   const carDeltas = groupedDeltaPanels.car;
   const budgetStreamDeltas = groupedDeltaPanels.budgetStream;
   const costCategoryDeltas = groupedDeltaPanels.costCategory;
-
-  // 8. Delta signals detail (limit 5, severity-constrained)
-  const deltaSignalsDetail = finiteLimited(
-    (comparison?.deltas || []).filter((d: any) => ['high', 'medium'].includes(d.severity)),
-    5
-  );
-
-  // 9. Read-only comparison preview (limit 6)
-  const readOnlyComparisonPreview = finiteLimited(comparison?.deltas, 6);
+  const deltaSignalsDetail = safeArray((comparison?.deltas || []).filter((d: any) => ['high', 'medium'].includes(d.severity))).slice(0, 5);
+  const readOnlyComparisonPreview = safeArray(comparison?.deltas).slice(0, 6);
 
   // 10. Empty state
   const empty = !baseVersion || !comparisonVersion || !comparison;

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import * as service from '../forecastVersions/forecastVersionService';
 import * as adapter from './forecastManagementDataAdapter';
+import { formatCurrency } from '../../utils/formatCurrency';
 
 // Mock the service functions to avoid network/fetch
 vi.mock('../forecastVersions/forecastVersionService', async () => {
@@ -100,6 +101,52 @@ describe('ForecastManagementDataAdapter', () => {
     const unsupported = ['Edit Forecast', 'Create Forecast Version', 'Approve Forecast', 'Run AI Explanation'];
     for (const label of unsupported) {
       expect(JSON.stringify(vm)).not.toContain(label);
+    }
+  });
+});
+
+describe('Snapshot Lines Preview (adapter)', () => {
+  it('does not include forecastVersionId or id in preview fields', async () => {
+    const vm = await adapter.getForecastManagementWorkspaceViewModel();
+    if (!vm.snapshotLinesPreview.length) return;
+    for (const line of vm.snapshotLinesPreview) {
+      expect(line.forecastVersionId).toBeUndefined();
+      expect(line.id).toBeUndefined();
+    }
+  });
+
+  it('does not include JSON-like string in preview', async () => {
+    const vm = await adapter.getForecastManagementWorkspaceViewModel();
+    // Simulate the table row rendering logic as a string
+    const rowString = vm.snapshotLinesPreview.map(line => [
+      line.project || '-',
+      line.month || '-',
+      line.costCategory || '-',
+      line.budgetStream || '-',
+      formatCurrency(line.forecast),
+      formatCurrency(line.actual),
+      formatCurrency(line.budget),
+      formatCurrency(line.variance),
+    ].join(' | ')).join('\n');
+    expect(rowString).not.toMatch(/[{}]/);
+  });
+
+  it('currency values are formatted in render model', async () => {
+    const vm = await adapter.getForecastManagementWorkspaceViewModel();
+    for (const line of vm.snapshotLinesPreview) {
+      expect(formatCurrency(line.forecast)).toMatch(/\$/);
+      expect(formatCurrency(line.actual)).toMatch(/\$/);
+      expect(formatCurrency(line.budget)).toMatch(/\$/);
+      expect(formatCurrency(line.variance)).toMatch(/\$/);
+    }
+    expect(formatCurrency(NaN)).toBe('-');
+  });
+
+  it('preview is read-only (no edit fields)', async () => {
+    const vm = await adapter.getForecastManagementWorkspaceViewModel();
+    for (const line of vm.snapshotLinesPreview) {
+      const hasEdit = Object.values(line).some(v => typeof v === 'function');
+      expect(hasEdit).toBe(false);
     }
   });
 });

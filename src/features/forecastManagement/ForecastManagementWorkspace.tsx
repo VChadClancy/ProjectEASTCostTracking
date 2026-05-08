@@ -104,11 +104,40 @@ export const ForecastManagementWorkspace: React.FC = () => {
         return (
           <div>
             <strong>Snapshot Lines Preview (read-only):</strong>
-            <ul>
-              {vm.snapshotLinesPreview.map((line: any, idx: number) => (
-                <li key={idx}>{JSON.stringify(line)}</li>
-              ))}
-            </ul>
+            {vm.snapshotLinesPreview.length === 0 ? (
+              <div style={{ color: atlasTheme.colors.textSecondary, marginTop: 8 }}>No snapshot lines available.</div>
+            ) : (
+              <div style={{ overflowX: 'auto', marginTop: 8 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', background: atlasTheme.colors.surface, borderRadius: atlasTheme.layout.cardRadius }}>
+                  <thead>
+                    <tr style={{ background: atlasTheme.colors.background }}>
+                      <th style={{ padding: '6px 12px', textAlign: 'left', color: atlasTheme.colors.textSecondary }}>Project</th>
+                      <th style={{ padding: '6px 12px', textAlign: 'left', color: atlasTheme.colors.textSecondary }}>Month</th>
+                      <th style={{ padding: '6px 12px', textAlign: 'left', color: atlasTheme.colors.textSecondary }}>Cost Category</th>
+                      <th style={{ padding: '6px 12px', textAlign: 'left', color: atlasTheme.colors.textSecondary }}>Budget Stream</th>
+                      <th style={{ padding: '6px 12px', textAlign: 'right', color: atlasTheme.colors.textSecondary }}>Forecast</th>
+                      <th style={{ padding: '6px 12px', textAlign: 'right', color: atlasTheme.colors.textSecondary }}>Actual</th>
+                      <th style={{ padding: '6px 12px', textAlign: 'right', color: atlasTheme.colors.textSecondary }}>Budget</th>
+                      <th style={{ padding: '6px 12px', textAlign: 'right', color: atlasTheme.colors.textSecondary }}>Variance</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {vm.snapshotLinesPreview.map((line: any, idx: number) => (
+                      <tr key={idx} style={{ borderBottom: `1px solid ${atlasTheme.colors.border}` }}>
+                        <td style={{ padding: '6px 12px' }}>{line.projectName || line.project || '-'}</td>
+                        <td style={{ padding: '6px 12px' }}>{line.month || '-'}</td>
+                        <td style={{ padding: '6px 12px' }}>{line.costCategory || '-'}</td>
+                        <td style={{ padding: '6px 12px' }}>{line.budgetStream || '-'}</td>
+                        <td style={{ padding: '6px 12px', textAlign: 'right' }}>{formatCurrency(line.forecast)}</td>
+                        <td style={{ padding: '6px 12px', textAlign: 'right' }}>{formatCurrency(line.actual)}</td>
+                        <td style={{ padding: '6px 12px', textAlign: 'right' }}>{formatCurrency(line.budget)}</td>
+                        <td style={{ padding: '6px 12px', textAlign: 'right' }}>{formatCurrency(line.variance)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         );
       case 'recentVersions':
@@ -164,9 +193,9 @@ export const ForecastManagementWorkspace: React.FC = () => {
   }
 
   return (
-    <div className="forecast-management-workspace">
+    <div className="forecast-management-workspace" data-testid="forecast-management-workspace" style={{ display: 'block', minHeight: '60vh', background: atlasTheme.colors.background, color: atlasTheme.colors.textPrimary }}>
       <PageHeader title="Forecast Management Workspace" />
-      <div className="workspace-sections">
+      <div className="workspace-sections" data-testid="forecast-management-content" style={{ display: 'block', minHeight: '40vh' }}>
         {sections.map((section) => (
           <WorkspaceCard
             key={section.id}
