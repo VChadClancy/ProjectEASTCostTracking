@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   getForecastManagementWorkspaceSections,
   ForecastManagementWorkspaceSection,
 } from './forecastManagementWorkspaceModel';
+import { getForecastManagementWorkspaceViewModel } from './forecastManagementDataAdapter';
 
 import { PageHeader } from '../../components/shell/PageHeader';
 import { WorkspaceCard } from '../../components/shell/WorkspaceCard';
@@ -11,6 +12,119 @@ import { CapabilityChip } from '../../components/shell/CapabilityChip';
 import { EmptyState } from '../../components/shell/EmptyState';
 
 export const ForecastManagementWorkspace: React.FC = () => {
+  const [vm, setVm] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    getForecastManagementWorkspaceViewModel()
+      .then((data) => {
+        if (mounted) {
+          setVm(data);
+          setError(data.error || null);
+        }
+      })
+      .catch((e) => {
+        if (mounted) setError(String(e));
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+    return () => { mounted = false; };
+  }, []);
+
+  if (loading) return <EmptyState title="Loading forecast workspace..." />;
+  if (error) return <EmptyState title="Error loading workspace" description={error} />;
+  if (!vm || vm.empty) return <EmptyState title="No forecast versions found" />;
+
+  // Section rendering helpers
+  function renderSection(section: ForecastManagementWorkspaceSection) {
+    switch (section.id) {
+      case 'versionSelector':
+        return (
+          <div>
+            <strong>Version Selector:</strong>
+            <ul>
+              {vm.selectorItems.map((item: any) => (
+                <li key={item.id}>{item.label}</li>
+              ))}
+            </ul>
+          </div>
+        );
+      case 'forecastSummaryCards':
+        return vm.currentVersionSummary ? (
+          <div>
+            <strong>Summary:</strong>
+            <div>Total Budget: {vm.currentVersionSummary.totalBudget}</div>
+            <div>Total Forecast: {vm.currentVersionSummary.totalForecast}</div>
+            <div>Total Actuals: {vm.currentVersionSummary.totalActuals}</div>
+            <div>Total Variance: {vm.currentVersionSummary.totalVariance}</div>
+          </div>
+        ) : null;
+      case 'currentVersionMetadata':
+        return vm.currentVersion ? (
+          <div>
+            <strong>Current Version:</strong> {vm.currentVersion.name} (ID: {vm.currentVersion.id})
+          </div>
+        ) : null;
+      case 'snapshotSummary':
+        return vm.snapshotSummary ? (
+          <div>
+            <strong>Snapshot Summary:</strong> {vm.snapshotSummary.label}
+          </div>
+        ) : null;
+      case 'snapshotLinesPreview':
+        return (
+          <div>
+            <strong>Snapshot Lines Preview (read-only):</strong>
+            <ul>
+              {vm.snapshotLinesPreview.map((line: any, idx: number) => (
+                <li key={idx}>{JSON.stringify(line)}</li>
+              ))}
+            </ul>
+          </div>
+        );
+      case 'recentVersions':
+        return (
+          <div>
+            <strong>Recent Versions:</strong>
+            <ul>
+              {vm.recentVersions.map((v: any) => (
+                <li key={v.id}>{v.name}</li>
+              ))}
+            </ul>
+          </div>
+        );
+      case 'comparisonOverview':
+        return vm.comparisonOverview ? (
+          <div>
+            <strong>Comparison Version:</strong> {vm.comparisonOverview.label}
+          </div>
+        ) : null;
+      case 'deltaSignalsPreview':
+        return (
+          <div>
+            <strong>Delta Signals Preview:</strong>
+            <ul>
+              {vm.deltaSignalsPreview.map((ds: any, idx: number) => (
+                <li key={idx}>{ds.group} ({ds.severity})</li>
+              ))}
+            </ul>
+          </div>
+        );
+      default:
+        if (section.status === 'preview') {
+          return <EmptyState title="Preview only – not fully implemented" />;
+        }
+        if (section.status === 'future') {
+          return <EmptyState title="Placeholder – coming soon" />;
+        }
+        return null;
+    }
+  }
+
   const sections = getForecastManagementWorkspaceSections();
 
   return (
@@ -36,26 +150,7 @@ export const ForecastManagementWorkspace: React.FC = () => {
               </>
             }
           >
-            {/* Section-specific placeholders */}
-            {section.status === 'preview' && (
-              <EmptyState title="Preview only – not fully implemented" />
-            )}
-            {section.status === 'future' && (
-              <EmptyState title="Placeholder – coming soon" />
-            )}
-            {section.id === 'snapshotLinesPreview' && (
-              <EmptyState title="Read-only preview. Editing not available." />
-            )}
-            {section.id === 'versionSelector' && (
-              <div style={{ fontStyle: 'italic', color: '#888' }}>
-                Version Selector control goes here.
-              </div>
-            )}
-            {section.id === 'comparisonOverview' && (
-              <div style={{ fontStyle: 'italic', color: '#888' }}>
-                Comparison controls/overview placeholder.
-              </div>
-            )}
+            {renderSection(section)}
           </WorkspaceCard>
         ))}
       </div>

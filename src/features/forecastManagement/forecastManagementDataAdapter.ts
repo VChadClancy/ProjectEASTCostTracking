@@ -112,3 +112,70 @@ export async function getForecastManagementWorkspaceViewModel({
     deltaSignalsPreview,
   };
 }
+
+// Pure helper for testability
+export function buildForecastManagementWorkspaceViewModelFromVersions(versions: any[], opts: any = {}) {
+  const {
+    maxSnapshotLines = 6,
+    maxRecentVersions = 5,
+    maxDeltaSignals = 5,
+  } = opts;
+  if (!versions.length) {
+    return {
+      versions: [],
+      selectorItems: [],
+      currentVersion: null,
+      comparisonVersion: null,
+      currentVersionSummary: null,
+      snapshotSummary: null,
+      snapshotLinesPreview: [],
+      recentVersions: [],
+      comparisonOverview: null,
+      deltaSignalsPreview: [],
+      empty: true,
+    };
+  }
+  const currentVersion = versions[0];
+  const comparisonVersion = versions.length > 1 ? versions[1] : null;
+  const selectorItems = buildForecastVersionSelectorItems(versions);
+  const currentVersionSummary = buildForecastVersionSummary(currentVersion);
+  const snapshotSummary = buildForecastVersionSnapshotSummary(currentVersion);
+  const snapshotLinesPreview = Array.isArray(currentVersion?.snapshotLines) ? currentVersion.snapshotLines.slice(0, maxSnapshotLines) : [];
+  const recentVersions = versions.slice(0, maxRecentVersions);
+  const comparisonOverview = comparisonVersion ? buildForecastVersionSummary(comparisonVersion) : null;
+  let deltaSignalsPreview: any[] = [];
+  if (comparisonVersion) {
+    const fakeComparison = {
+      versionAId: currentVersion.id,
+      versionBId: comparisonVersion.id,
+      deltas: [],
+      summary: {
+        totalAmountDelta: 0,
+        totalPercentDelta: 0,
+        byProject: {},
+        byCar: {},
+        byBudgetStream: {},
+        byCostCategory: {},
+        severityCounts: {
+          healthy: 0,
+          attention: 0,
+          risk: 0,
+          info: 0,
+        },
+      },
+    };
+    deltaSignalsPreview = buildForecastVersionDeltaSignals(fakeComparison).slice(0, maxDeltaSignals);
+  }
+  return {
+    versions,
+    selectorItems,
+    currentVersion,
+    comparisonVersion,
+    currentVersionSummary,
+    snapshotSummary,
+    snapshotLinesPreview,
+    recentVersions,
+    comparisonOverview,
+    deltaSignalsPreview,
+  };
+}
