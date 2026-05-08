@@ -24,7 +24,7 @@ export const atlasNavigation: AtlasNavItem[] = [
     id: "forecasting",
     label: "Forecasting",
     path: "/forecasting",
-    description: "Plan and project future financials.",
+    description: "View forecast versions, planning outlooks, and projected financials.",
   },
   {
     id: "actuals-intake",
