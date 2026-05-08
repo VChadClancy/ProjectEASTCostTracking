@@ -75,6 +75,7 @@ export interface ForecastVersion {
   lockedBy?: string;
   sourceVersionId?: string;
   notes?: string;
+  snapshotLines: ForecastVersionLine[];
 }
 
 // 3. Monthly Snapshot Line/Item

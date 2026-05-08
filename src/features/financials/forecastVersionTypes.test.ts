@@ -66,6 +66,7 @@ describe('Forecast Version Domain Model', () => {
       fiscalYear: 2026,
       versionMonth: '2026-05',
       createdAt: new Date().toISOString(),
+      snapshotLines: [],
     };
     expect(version.scope).toBe(ForecastVersionScope.Program);
     expect(version.programId).toBeDefined();
@@ -84,6 +85,7 @@ describe('Forecast Version Domain Model', () => {
       fiscalYear: 2026,
       versionMonth: '2026-05',
       createdAt: new Date().toISOString(),
+      snapshotLines: [],
     };
     expect(version.scope).toBe(ForecastVersionScope.Project);
     expect(version.projectId).toBeDefined();

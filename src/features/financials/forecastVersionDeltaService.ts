@@ -158,3 +158,5 @@ export function groupForecastDeltasByCostCategory(deltas: ForecastVersionDelta[]
   }
   return grouped;
 }
+
+export type { ForecastVersionDelta, ForecastVersionDeltaSummary } from './forecastVersionTypes';
