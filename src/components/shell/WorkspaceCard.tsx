@@ -25,6 +25,7 @@ export const WorkspaceCard: React.FC<WorkspaceCardProps> = ({
   <div style={{
     border: `1px solid ${atlasTheme.colors.border}`,
     borderRadius: atlasTheme.layout.cardRadius,
+    boxShadow: atlasTheme.layout.cardShadow,
     padding: spacing.lg,
     background: atlasTheme.colors.surface,
     marginBottom: spacing.lg,

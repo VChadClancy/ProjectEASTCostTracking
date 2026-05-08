@@ -17,16 +17,16 @@ export const atlasTheme = {
     // Semantic
     primary: '#005EB8', // Eaton Blue
     primaryHover: '#004B85', // Eaton Dark Blue
-    background: '#FFFFFF',
-    surface: '#F4EFE7',
-    surfaceMuted: '#F1E2BF',
+    background: '#F8FAFC', // soft neutral background
+    surface: '#FFFFFF', // white card surface
+    surfaceMuted: '#F8FAFC', // very light cool gray for muted cards
     textPrimary: '#333F48', // Charcoal
     textSecondary: '#98A4AE', // Medium Gray
-    border: '#98A4AE',
+    border: '#E3E8EF', // subtle cool gray border
     success: '#4C9D2B',
     warning: '#FFD100',
     danger: '#D22730',
-    info: '#00B2A9',
+    info: '#00B2A9', // Teal for info/links
     aiInsight: '#005EB8', // Use Eaton Blue for AI highlights
   },
   // Layout Tokens

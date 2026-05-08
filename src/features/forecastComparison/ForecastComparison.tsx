@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { buildForecastComparisonViewModel } from './forecastComparisonDataAdapter';
 import { PageHeader, WorkspaceCard, CapabilityChip, EmptyState } from '../../components/shell';
+import { atlasTheme } from '../../styles/atlasTheme';
+import { formatCurrency } from '../../utils/formatCurrency';
 
 // Forbidden workflow labels (internal, not exposed unless present)
 const forbiddenWorkflowLabels = [
@@ -66,32 +68,62 @@ export function ForecastComparison() {
   if (!model || model.empty) return <EmptyState title="No Comparison Data" description="Select forecast versions to compare." />;
 
   return (
-    <div className="forecast-comparison">
+    <div className="forecast-comparison" style={{ background: atlasTheme.colors.background, padding: atlasTheme.layout.pagePadding }}>
       <PageHeader title="Forecast Comparison" />
       <WorkspaceCard title="Version Pair Selector">
-        {/* Render version pair selector summary */}
-        <div>{model.versionPairSelector?.title || 'Select versions'}</div>
+        <div style={{ display: 'flex', gap: '32px' }}>
+          <div style={{ flex: 1 }}>
+            <strong>Base / Current Version</strong>
+            <div style={{ marginTop: 8, background: atlasTheme.colors.surface, borderRadius: atlasTheme.layout.cardRadius, border: `1px solid ${atlasTheme.colors.border}`, padding: 16 }}>
+              {model.versionPairSelector?.base || 'Select base version'}
+            </div>
+          </div>
+          <div style={{ flex: 1 }}>
+            <strong>Compare To Version</strong>
+            <div style={{ marginTop: 8, background: atlasTheme.colors.surface, borderRadius: atlasTheme.layout.cardRadius, border: `1px solid ${atlasTheme.colors.border}`, padding: 16 }}>
+              {model.versionPairSelector?.compare || 'Select comparison version'}
+            </div>
+          </div>
+        </div>
       </WorkspaceCard>
       <WorkspaceCard title="Delta Summary Cards">
-        {/* Render delta summary cards */}
-        <div>{model.deltaSummaryCards ? 'Delta summary present' : 'No delta summary'}</div>
+        <div style={{ display: 'flex', gap: '24px' }}>
+          {model.deltaSummaryCards?.map((card: any, idx: number) => (
+            <div key={idx} style={{ flex: 1, background: atlasTheme.colors.surface, borderRadius: atlasTheme.layout.cardRadius, border: `1px solid ${atlasTheme.colors.border}`, padding: 16, boxShadow: atlasTheme.layout.cardShadow }}>
+              <div style={{ color: atlasTheme.colors.textSecondary, fontSize: atlasTheme.typography.caption }}>{card.label}</div>
+              <div style={{ color: atlasTheme.colors.textPrimary, fontSize: atlasTheme.typography.title, fontWeight: 600 }}>{formatCurrency(card.value)}</div>
+            </div>
+          ))}
+        </div>
       </WorkspaceCard>
       <WorkspaceCard title="Monthly Movement Summary">
         <div>{model.monthlyMovementSummary?.length ? 'Monthly movement data' : 'No monthly movement'}</div>
       </WorkspaceCard>
       <WorkspaceCard title="Grouped Delta Panels">
-        <div>
-          <div>Project Deltas: {model.projectDeltas?.length}</div>
-          <div>CAR Deltas: {model.carDeltas?.length}</div>
-          <div>Budget Stream Deltas: {model.budgetStreamDeltas?.length}</div>
-          <div>Cost Category Deltas: {model.costCategoryDeltas?.length}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
+          <div style={{ background: atlasTheme.colors.surface, borderRadius: atlasTheme.layout.cardRadius, border: `1px solid ${atlasTheme.colors.border}`, padding: 16 }}>
+            <strong>Project Deltas</strong>
+            <div>{model.projectDeltas?.length ? model.projectDeltas.length : 0}</div>
+          </div>
+          <div style={{ background: atlasTheme.colors.surface, borderRadius: atlasTheme.layout.cardRadius, border: `1px solid ${atlasTheme.colors.border}`, padding: 16 }}>
+            <strong>CAR Deltas</strong>
+            <div>{model.carDeltas?.length ? model.carDeltas.length : 0}</div>
+          </div>
+          <div style={{ background: atlasTheme.colors.surface, borderRadius: atlasTheme.layout.cardRadius, border: `1px solid ${atlasTheme.colors.border}`, padding: 16 }}>
+            <strong>Budget Stream Deltas</strong>
+            <div>{model.budgetStreamDeltas?.length ? model.budgetStreamDeltas.length : 0}</div>
+          </div>
+          <div style={{ background: atlasTheme.colors.surface, borderRadius: atlasTheme.layout.cardRadius, border: `1px solid ${atlasTheme.colors.border}`, padding: 16 }}>
+            <strong>Cost Category Deltas</strong>
+            <div>{model.costCategoryDeltas?.length ? model.costCategoryDeltas.length : 0}</div>
+          </div>
         </div>
       </WorkspaceCard>
       <WorkspaceCard title="Delta Signals Detail">
         <div>{model.deltaSignalsDetail?.length ? 'Delta signals present' : 'No delta signals'}</div>
       </WorkspaceCard>
       <WorkspaceCard title="Read-Only Comparison Preview" accent={<CapabilityChip label="Read-Only Preview" />}>
-        <div>{model.readOnlyComparisonPreview?.length ? 'Preview data' : 'No preview data'}</div>
+        <div style={{ color: atlasTheme.colors.textSecondary }}>{model.readOnlyComparisonPreview?.length ? 'Preview data' : 'No preview data'}</div>
       </WorkspaceCard>
     </div>
   );

@@ -12,6 +12,8 @@ import { StatusBadge } from '../../components/shell/StatusBadge';
 import { CapabilityChip } from '../../components/shell/CapabilityChip';
 import { EmptyState } from '../../components/shell/EmptyState';
 import { ForecastComparison } from '../forecastComparison/ForecastComparison';
+import { formatCurrency } from '../../utils/formatCurrency';
+import { atlasTheme } from '../../styles/atlasTheme';
 
 export const ForecastManagementWorkspace: React.FC = () => {
   const [vm, setVm] = useState<any>(null);
@@ -46,23 +48,44 @@ export const ForecastManagementWorkspace: React.FC = () => {
     switch (section.id) {
       case 'versionSelector':
         return (
-          <div>
-            <strong>Version Selector:</strong>
-            <ul>
-              {vm.selectorItems.map((item: any) => (
-                <li key={item.id}>{item.label}</li>
-              ))}
-            </ul>
+          <div style={{ display: 'flex', gap: '32px', marginBottom: '24px' }}>
+            <div style={{ flex: 1 }}>
+              <strong>Base / Current Version</strong>
+              <div style={{ marginTop: 8, background: atlasTheme.colors.surface, borderRadius: atlasTheme.layout.cardRadius, border: `1px solid ${atlasTheme.colors.border}`, padding: 16 }}>
+                {vm.selectorItems.filter((item: any) => item.type === 'base').map((item: any) => (
+                  <div key={item.id} style={{ color: atlasTheme.colors.textPrimary }}>{item.label}</div>
+                ))}
+              </div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <strong>Compare To Version</strong>
+              <div style={{ marginTop: 8, background: atlasTheme.colors.surface, borderRadius: atlasTheme.layout.cardRadius, border: `1px solid ${atlasTheme.colors.border}`, padding: 16 }}>
+                {vm.selectorItems.filter((item: any) => item.type === 'compare').map((item: any) => (
+                  <div key={item.id} style={{ color: atlasTheme.colors.textPrimary }}>{item.label}</div>
+                ))}
+              </div>
+            </div>
           </div>
         );
       case 'forecastSummaryCards':
         return vm.currentVersionSummary ? (
-          <div>
-            <strong>Summary:</strong>
-            <div>Total Budget: {vm.currentVersionSummary.totalBudget}</div>
-            <div>Total Forecast: {vm.currentVersionSummary.totalForecast}</div>
-            <div>Total Actuals: {vm.currentVersionSummary.totalActuals}</div>
-            <div>Total Variance: {vm.currentVersionSummary.totalVariance}</div>
+          <div style={{ display: 'flex', gap: '24px', marginBottom: '24px' }}>
+            <div style={{ flex: 1, background: atlasTheme.colors.surface, borderRadius: atlasTheme.layout.cardRadius, border: `1px solid ${atlasTheme.colors.border}`, padding: 16, boxShadow: atlasTheme.layout.cardShadow }}>
+              <div style={{ color: atlasTheme.colors.textSecondary, fontSize: atlasTheme.typography.caption }}>Budget</div>
+              <div style={{ color: atlasTheme.colors.textPrimary, fontSize: atlasTheme.typography.title, fontWeight: 600 }}>{formatCurrency(vm.currentVersionSummary.totalBudget)}</div>
+            </div>
+            <div style={{ flex: 1, background: atlasTheme.colors.surface, borderRadius: atlasTheme.layout.cardRadius, border: `1px solid ${atlasTheme.colors.border}`, padding: 16, boxShadow: atlasTheme.layout.cardShadow }}>
+              <div style={{ color: atlasTheme.colors.textSecondary, fontSize: atlasTheme.typography.caption }}>Forecast</div>
+              <div style={{ color: atlasTheme.colors.textPrimary, fontSize: atlasTheme.typography.title, fontWeight: 600 }}>{formatCurrency(vm.currentVersionSummary.totalForecast)}</div>
+            </div>
+            <div style={{ flex: 1, background: atlasTheme.colors.surface, borderRadius: atlasTheme.layout.cardRadius, border: `1px solid ${atlasTheme.colors.border}`, padding: 16, boxShadow: atlasTheme.layout.cardShadow }}>
+              <div style={{ color: atlasTheme.colors.textSecondary, fontSize: atlasTheme.typography.caption }}>Actuals</div>
+              <div style={{ color: atlasTheme.colors.textPrimary, fontSize: atlasTheme.typography.title, fontWeight: 600 }}>{formatCurrency(vm.currentVersionSummary.totalActuals)}</div>
+            </div>
+            <div style={{ flex: 1, background: atlasTheme.colors.surface, borderRadius: atlasTheme.layout.cardRadius, border: `1px solid ${atlasTheme.colors.border}`, padding: 16, boxShadow: atlasTheme.layout.cardShadow }}>
+              <div style={{ color: atlasTheme.colors.textSecondary, fontSize: atlasTheme.typography.caption }}>Variance</div>
+              <div style={{ color: atlasTheme.colors.textPrimary, fontSize: atlasTheme.typography.title, fontWeight: 600 }}>{formatCurrency(vm.currentVersionSummary.totalVariance)}</div>
+            </div>
           </div>
         ) : null;
       case 'currentVersionMetadata':
