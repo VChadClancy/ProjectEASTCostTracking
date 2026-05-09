@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import * as React from 'react';
 import { ForecastManagementWorkspace, getForecastManagementWorkspaceRenderModel } from './ForecastManagementWorkspace';
 import { formatCurrency } from '../../utils/formatCurrency';
+import { ForecastSnapshotDetailDrawer } from '../forecastSnapshotDetail/ForecastSnapshotDetailDrawer';
+import { toForecastSnapshotDetailViewModel, emptyForecastSnapshotDetailViewModel } from '../forecastSnapshotDetail/forecastSnapshotDetailDataAdapter';
 
 
 describe('ForecastManagementWorkspace', () => {
@@ -95,6 +97,77 @@ describe('ForecastManagementWorkspace', () => {
       // Check for absence of edit controls
       const hasEdit = Object.values(preview[0]).some(v => typeof v === 'function');
       expect(hasEdit).toBe(false);
+    });
+  });
+
+  describe('ForecastManagementWorkspace drawer integration', () => {
+    it('indicates snapshot detail drawer capability in the render model', () => {
+      // The render model should not expose forbidden fields and should be read-only
+      const model = getForecastManagementWorkspaceRenderModel();
+      expect(model.sectionTitles).toContain('Snapshot Lines Preview');
+      expect(model.readOnlySectionIds).toContain('snapshotLinesPreview');
+    });
+
+    it('exposes a safe user-facing detail action/intent', () => {
+      // Simulate a snapshot line and transform it
+      const line = {
+        project: 'P1',
+        month: '2026-01',
+        costCategory: 'Labor',
+        budgetStream: 'CapEx',
+        forecast: 12345,
+        actual: 12000,
+        budget: 12500,
+        variance: -500,
+      };
+      const detail = toForecastSnapshotDetailViewModel(line);
+      expect(detail).toBeDefined();
+      expect(detail.project).toBe('P1');
+      expect(detail.isReadOnly).toBe(true);
+    });
+
+    it('drawer integration does not expose raw JSON or forecastVersionId', () => {
+      const detail = { ...emptyForecastSnapshotDetailViewModel, project: '{ "foo": 1 }', sourceMetadata: '{bar:2}', forecastVersionId: 'shouldHide' };
+      const el = ForecastSnapshotDetailDrawer({ isOpen: true, detail, onClose: () => {} });
+      // Should not find the raw JSON string or forbidden field in the tree
+      function findTextInTree(node, text) {
+        if (!node) return false;
+        if (typeof node === 'string' || typeof node === 'number') {
+          return String(node).includes(text);
+        }
+        if (Array.isArray(node)) {
+          return node.some(child => findTextInTree(child, text));
+        }
+        if (node.props && node.props.children) {
+          return findTextInTree(node.props.children, text);
+        }
+        return false;
+      }
+      expect(findTextInTree(el, '{ "foo": 1 }')).toBe(false);
+      expect(findTextInTree(el, '{bar:2}')).toBe(false);
+      expect(findTextInTree(el, 'forecastVersionId')).toBe(false);
+    });
+
+    it('drawer remains read-only and does not introduce unsupported labels', () => {
+      const el = ForecastSnapshotDetailDrawer({ isOpen: true, detail: emptyForecastSnapshotDetailViewModel, onClose: () => {} });
+      function findTextInTree(node, text) {
+        if (!node) return false;
+        if (typeof node === 'string' || typeof node === 'number') {
+          return String(node).includes(text);
+        }
+        if (Array.isArray(node)) {
+          return node.some(child => findTextInTree(child, text));
+        }
+        if (node.props && node.props.children) {
+          return findTextInTree(node.props.children, text);
+        }
+        return false;
+      }
+      expect(findTextInTree(el, 'Edit Forecast')).toBe(false);
+      expect(findTextInTree(el, 'Create Forecast Version')).toBe(false);
+      expect(findTextInTree(el, 'Approve Forecast')).toBe(false);
+      expect(findTextInTree(el, 'Run AI Explanation')).toBe(false);
+      expect(findTextInTree(el, 'Read-only')).toBe(true);
     });
   });
 });

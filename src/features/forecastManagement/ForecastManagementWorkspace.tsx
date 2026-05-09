@@ -14,11 +14,16 @@ import { EmptyState } from '../../components/shell/EmptyState';
 import { ForecastComparison } from '../forecastComparison/ForecastComparison';
 import { formatCurrency } from '../../utils/formatCurrency';
 import { atlasTheme } from '../../styles/atlasTheme';
+import { ForecastSnapshotDetailDrawer } from '../forecastSnapshotDetail/ForecastSnapshotDetailDrawer';
+import { toForecastSnapshotDetailViewModel } from '../forecastSnapshotDetail/forecastSnapshotDetailDataAdapter';
 
 export const ForecastManagementWorkspace: React.FC = () => {
   const [vm, setVm] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Drawer state for snapshot line detail
+  const [selectedSnapshotLineDetail, setSelectedSnapshotLineDetail] = useState<any | null>(null);
+  const isDrawerOpen = !!selectedSnapshotLineDetail;
 
   useEffect(() => {
     let mounted = true;
@@ -119,11 +124,16 @@ export const ForecastManagementWorkspace: React.FC = () => {
                       <th style={{ padding: '6px 12px', textAlign: 'right', color: atlasTheme.colors.textSecondary }}>Actual</th>
                       <th style={{ padding: '6px 12px', textAlign: 'right', color: atlasTheme.colors.textSecondary }}>Budget</th>
                       <th style={{ padding: '6px 12px', textAlign: 'right', color: atlasTheme.colors.textSecondary }}>Variance</th>
+                      <th style={{ padding: '6px 12px', textAlign: 'center', color: atlasTheme.colors.textSecondary }}></th>
                     </tr>
                   </thead>
                   <tbody>
                     {vm.snapshotLinesPreview.map((line: any, idx: number) => (
-                      <tr key={idx} style={{ borderBottom: `1px solid ${atlasTheme.colors.border}` }}>
+                      <tr key={idx} style={{ borderBottom: `1px solid ${atlasTheme.colors.border}`, cursor: 'pointer' }}
+                        onClick={() => setSelectedSnapshotLineDetail(toForecastSnapshotDetailViewModel(line))}
+                        tabIndex={0}
+                        aria-label="View details for snapshot line"
+                      >
                         <td style={{ padding: '6px 12px' }}>{line.projectName || line.project || '-'}</td>
                         <td style={{ padding: '6px 12px' }}>{line.month || '-'}</td>
                         <td style={{ padding: '6px 12px' }}>{line.costCategory || '-'}</td>
@@ -132,6 +142,14 @@ export const ForecastManagementWorkspace: React.FC = () => {
                         <td style={{ padding: '6px 12px', textAlign: 'right' }}>{formatCurrency(line.actual)}</td>
                         <td style={{ padding: '6px 12px', textAlign: 'right' }}>{formatCurrency(line.budget)}</td>
                         <td style={{ padding: '6px 12px', textAlign: 'right' }}>{formatCurrency(line.variance)}</td>
+                        <td style={{ padding: '6px 12px', textAlign: 'center' }}>
+                          <span style={{ color: atlasTheme.colors.eatonBlue, textDecoration: 'underline', cursor: 'pointer', fontSize: 13 }}
+                            onClick={e => { e.stopPropagation(); setSelectedSnapshotLineDetail(toForecastSnapshotDetailViewModel(line)); }}
+                            tabIndex={0}
+                            role="button"
+                            aria-label="View details"
+                          >View details</span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -214,6 +232,11 @@ export const ForecastManagementWorkspace: React.FC = () => {
           </WorkspaceCard>
         ))}
       </div>
+      <ForecastSnapshotDetailDrawer
+        isOpen={isDrawerOpen}
+        detail={selectedSnapshotLineDetail}
+        onClose={() => setSelectedSnapshotLineDetail(null)}
+      />
     </div>
   );
 };
