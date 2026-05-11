@@ -2,6 +2,7 @@ import React, { useState, useCallback } from "react";
 import { AtlasAppShell } from "./components/shell/AtlasAppShell";
 import { ProgramWorkspace } from "./features/programWorkspace/ProgramWorkspace";
 import { ForecastManagementWorkspace } from "./features/forecastManagement/ForecastManagementWorkspace";
+import { PlanningManagementWorkspace } from "./features/planningManagement/PlanningManagementWorkspace";
 import { atlasNavigation } from "./components/shell/navigation";
 
 export const defaultAtlasPageTitle = "Program Workspace";
@@ -11,6 +12,7 @@ export const DEFAULT_APP_PAGE_ID = "program-workspace";
 export const appPages = [
   { id: "program-workspace", label: "Program Workspace", component: ProgramWorkspace },
   { id: "forecasting", label: "Forecasting", component: ForecastManagementWorkspace },
+  { id: "planning-management", label: "Planning", component: PlanningManagementWorkspace },
 ];
 
 export function getDefaultAppPage() {
@@ -34,6 +36,7 @@ export function getAppPageRenderModel() {
 const PAGE_COMPONENTS: Record<string, React.FC> = {
   "program-workspace": ProgramWorkspace,
   "forecasting": ForecastManagementWorkspace,
+  "planning-management": PlanningManagementWorkspace,
 };
 
 function App() {

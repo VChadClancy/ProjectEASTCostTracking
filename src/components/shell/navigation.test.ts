@@ -37,4 +37,11 @@ describe("atlasNavigation model", () => {
     const uniqueIds = new Set(ids);
     expect(ids.length).toBe(uniqueIds.size);
   });
+
+  it("includes Planning nav item", () => {
+    const navLabels = atlasNavigation.map((item) => item.label);
+    expect(navLabels).toContain("Planning");
+    const navIds = atlasNavigation.map((item) => item.id);
+    expect(navIds).toContain("planning-management");
+  });
 });
