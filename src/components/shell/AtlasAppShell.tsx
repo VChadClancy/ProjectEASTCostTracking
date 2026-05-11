@@ -38,8 +38,12 @@ export const AtlasAppShell: React.FC<AtlasAppShellProps> = ({ children, pageTitl
 
   // Placeholder page content
   function renderPagePlaceholder(nav: AtlasNavItem) {
-    // Show financials content for Forecasting/Actuals Intake
-    if (nav.label === "Forecasting" || nav.label === "Actuals Intake") {
+    // Show real content for implemented pages
+    if (
+      nav.label === "Forecasting" ||
+      nav.label === "Actuals Intake" ||
+      nav.id === "planning-management"
+    ) {
       return children;
     }
     return (
