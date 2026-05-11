@@ -27,6 +27,12 @@ export const atlasNavigation: AtlasNavItem[] = [
     description: "View forecast versions, planning outlooks, and projected financials.",
   },
   {
+    id: "planning-management",
+    label: "Planning",
+    path: "/planning-management",
+    description: "Workspace for financial and FTE/labor planning management.",
+  },
+  {
     id: "actuals-intake",
     label: "Actuals Intake",
     path: "/actuals-intake",
